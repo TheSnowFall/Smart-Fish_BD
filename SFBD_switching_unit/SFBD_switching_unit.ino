@@ -20,9 +20,7 @@
 
 HardwareSerial LoRA(USART2);
 
-byte payload[4] = {
-  0,
-};
+byte payload[4] = { 0, };
 
 void setup() {
   pinMode(M0_PIN, OUTPUT_OPEN_DRAIN);
@@ -57,7 +55,7 @@ void loop() {
 
 
   if (LoRA.available() >= 3) {
-    // Read the incoming bytes into the rec_payload array
+   
     for (int i = 0; i < 4; i++) {
       payload[i] = LoRA.read();
        if (i == 1 || i == 2) {
