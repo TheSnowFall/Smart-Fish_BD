@@ -8,12 +8,13 @@
 #include <TinyGsmClient.h>
 #include "ArduinoNvs.h"
 #include "OneButton.h"
+#include <ESP32Ping.h>
 
 #define GSM_PIN ""
 
 #define SerialGeneric Serial
 #define SerialAT Serial1
-#define DUMP_AT_COMMANDS
+// #define DUMP_AT_COMMANDS
 #define TINY_GSM_DEBUG SerialGeneric
 
 
@@ -33,9 +34,11 @@ TinyGsm modem(SerialAT);
 
 
 
-String ssid = "";
-bool gsm_task_flag=false;
+
+bool gsm_task_flag = false;
 bool wifi_fail_flag = false;
+bool printed_gprs_tag = false;
+bool printed_wifi_tag = false;
 char apNameChar[32];
 int timeout = 120;
 String apn_id;
@@ -54,7 +57,7 @@ char publish_topic[13] = {
 };
 
 // ############################  Inserting variable regarding MQTT  ############################
-
+const char *remote_host = "www.google.com";
 // ############################  Inserting variable regarding GPRS  ###########################
 char apn[15] = {
   0,
@@ -103,10 +106,11 @@ WiFiManager *wmPtr;
 
 
 unsigned long startTime;
-bool wifi_begin_stat = false;
+bool Provision_status = false;
+
 enum wifi_conn_stat {
-  WIFI_NOT_BEGAN = 0,
-  WIFI_BEGAN
+  NOT_PROVISIONED = 0,
+  PROVISIONED
 };
 
 void IRAM_ATTR checkTicks() {
@@ -118,33 +122,42 @@ void IRAM_ATTR checkTicks() {
 
 
 void setup() {
+  delay(3000);
   WiFi.mode(WIFI_STA);
+  WiFi.begin();
+  delay(3000);
+
   NVS.begin();
   SerialGeneric.begin(115200);
   SerialGeneric.println("\n Starting");
   SerialGeneric.setDebugOutput(true);
-  pinMode(TRIGGER_PIN, INPUT_PULLUP);
+  // pinMode(TRIGGER_PIN, INPUT_PULLUP);
   pinMode(LED_GPIO, OUTPUT);
-
-  //#########  GSM start  #########
-
-
-  mqtt.setServer(broker, 1883);
-  mqtt.setCallback(mqttCallback);
-
-  mqtt_gprs.setServer(broker, 1883);
-  mqtt_gprs.setCallback(mqttCallback);
-
-
-  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), checkTicks, CHANGE);
-  button.attachClick(singleClick);
-  button.attachDoubleClick(doubleClick);
-
-  // button.setPressMs(1000);
-  // button.attachLongPressStart(pressStart);
-  // button.attachDuringLongPress(duringPress);
-
+  set_apn();
   generateAPName();
+
+  bool apnIsEmpty = true;
+  for (int i = 0; i < sizeof(apn); i++) {
+    if ((i == 0 || i == 1) && apn[i] != 0) {
+      apnIsEmpty = false;
+      break;
+    }
+  }
+
+  if (WiFi.SSID() == "" && apnIsEmpty == true){
+
+    Provision_status = NOT_PROVISIONED;
+    Serial.println("Not provisioned, Hit the button once please");
+  }
+  else{
+    Provision_status = PROVISIONED;
+    Serial.println("Provisioned, Sit tight");
+  }
+
+
+   if (Provision_status == PROVISIONED ){
+
+    
   if (get_topic(subscribe_topic, 0) == ESP_OK) {
     SerialGeneric.print("Subscribe topic created:");
     SerialGeneric.println(subscribe_topic);
@@ -159,20 +172,42 @@ void setup() {
     SerialGeneric.println("Publish topic could not be created!");
   }
 
-  set_apn();
+
+
+  
+
+  //#########  GSM start  #########
+
+  getting_sim_ready();
+
+  mqtt.setServer(broker, 1883);
+  mqtt.setCallback(mqttCallback);
+
+  mqtt_gprs.setServer(broker, 1883);
+  mqtt_gprs.setCallback(mqttCallback_gprs);
+  // mqtt_gprs.setCallback(mqttCallback);
+  }
+
+  attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), checkTicks, CHANGE);
+  button.attachClick(singleClick);
+  button.attachDoubleClick(doubleClick);
+
+
+
+
+  // button.setPressMs(1000);
+  // button.attachLongPressStart(pressStart);
+  // button.attachDuringLongPress(duringPress);
 }
-
-
-
-
-
 void loop() {
 
   button.tick();
 
 
 
-  if (single_press == true) {
+
+  // wifi_manager
+  if (single_press == true || Provision_status == NOT_PROVISIONED ) {
     startTime = millis();
 
     WiFiManager wm;
@@ -214,122 +249,87 @@ void loop() {
 
 
 
-    ssid = WiFi.SSID();
+   
     SerialGeneric.println("connected...yeey :)");
-    wifi_begin_stat = WIFI_BEGAN;
+    
     single_press = false;
-    goto mqtt_task;
+    esp_restart();
   }
 
-  if (wifi_begin_stat == WIFI_NOT_BEGAN) {
-    bool wifi_start = WiFi.begin();
-    if (!wifi_start) {
-      SerialGeneric.println(WiFi.status());
-      SerialGeneric.println("Wifi can not be connected!");
-    } else {
-      if (WiFi.status() != WL_DISCONNECTED) {}
-      wifi_begin_stat = WIFI_BEGAN;
-      SerialGeneric.println("Wifi begin done");
-    }
-  }
-
-mqtt_task:
-  if (WiFi.status() == WL_CONNECTED && WiFi.SSID() != "") {
-    if (WiFi.localIP() != IPAddress(0, 0, 0, 0) && testInternetConnectivity() == true) {  // Please add && google site ping is success
-
-      if (!mqtt.connected()) {
-        SerialGeneric.println("=== MQTT NOT CONNECTED W===");
-        // Reconnect every 10 seconds
-        uint32_t t = millis();
-        if (t - lastReconnectAttempt > 10000L) {
-          lastReconnectAttempt = t;
-          if (mqttConnect()) {
-            lastReconnectAttempt = 0;
-          }
-        }
-        delay(100);
-        return;
-      }
-
-      mqtt.loop();
-    } else {
-      wifi_fail_flag == true;
-      Serial.println("Moving to GPRS");
-      goto gsm_task;
-    }
 
 
+if (Provision_status == PROVISIONED){
 
+  if ((WiFi.status() != WL_CONNECTED) || (Ping.ping(remote_host) == false)) {
+    wifi_fail_flag = true;
+    gsm_task_flag = true;
 
+    goto gprs_mqtt;
   } else {
-    // SerialGeneric.println("May be there is no SSID and pass is set");
-    // go to sim 800l
-    Serial.println("Moving to GPRS");
-    wifi_fail_flag == true;
-    goto gsm_task;
+    wifi_fail_flag = false;
+    gsm_task_flag = false;
+
+    goto wifi_mqtt;
   }
 
 
+}
+else{
+
+}
 
 
- 
 
-  if (long_press == true) {
-    // SerialGeneric.println("Erasing Config, restarting");
-    // wmPtr->resetSettings(); // Reset WiFiManager settings
-    // ESP.restart(); // Restart ESP32
-    single_press = true;
-  }
 
-gsm_task:
-  if(gsm_task_flag == false && wifi_fail_flag == true){
-      getting_sim_ready();
-      Serial.println("Setup GPRS");
-    gsm_task_flag=true;
-  }
-  if(gsm_task_flag=true && wifi_fail_flag == true){
+gprs_mqtt:
+
+
+  if (gsm_task_flag == true && wifi_fail_flag == true) {
+
+    if (!printed_gprs_tag) {
+      SerialGeneric.println("########### MQTT IN GPRS #############");
+      printed_gprs_tag = true;
+    }
 
     if (!mqtt_gprs.connected()) {
-        SerialGeneric.println("=== MQTT NOT CONNECTED G===");
-        // Reconnect every 10 seconds
-        uint32_t t = millis();
-        if (t - lastReconnectAttempt > 10000L) {
-          lastReconnectAttempt = t;
-          if (mqttConnect_gprs()) {
-            lastReconnectAttempt = 0;
-          }
+      SerialGeneric.println("=== MQTT NOT CONNECTED G===");
+      // Reconnect every 10 seconds
+      uint32_t t = millis();
+      if (t - lastReconnectAttempt > 10000L) {
+        lastReconnectAttempt = t;
+        if (mqttConnect_gprs()) {
+          lastReconnectAttempt = 0;
         }
-        delay(100);
-        return;
       }
+      delay(100);
+      return;
+    }
 
-      mqtt_gprs.loop();
-
-
-
-
+    mqtt_gprs.loop();
   }
 
-   unsigned long currentMillis = millis();
 
-  if ((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >= interval) && ssid != "") {
-    // Increment retry count
-    retryCount++;
+wifi_mqtt:
 
-    //  if the maximum number of retries has been reached
-    if (retryCount <= 6) {
-
-      SerialGeneric.print((retryCount == 1) ? "Reconnecting to WiFi..." : ".");
-      WiFi.disconnect();
-      WiFi.reconnect();
-      previousMillis = currentMillis;
-
-      (WiFi.status() == WL_CONNECTED) ? SerialGeneric.println("Connected to WiFi...") : SerialGeneric.print("");
-    } else {
-      // Maximum number of retries reached, stop retrying
-      SerialGeneric.println("Maximum number of retries reached. Stopping.");
-
-      // retryCount = 0;  // need to trigger the SIM800l here
+  if (gsm_task_flag == false && wifi_fail_flag == false) {
+    if (!printed_wifi_tag) {
+      SerialGeneric.println("########### MQTT IN WiFi #############");
+      printed_wifi_tag = true;
     }
+    if (!mqtt.connected()) {
+      SerialGeneric.println("=== MQTT NOT CONNECTED W===");
+      // Reconnect every 10 seconds
+      uint32_t t = millis();
+      if (t - lastReconnectAttempt > 10000L) {
+        lastReconnectAttempt = t;
+        if (mqttConnect()) {
+          lastReconnectAttempt = 0;
+        }
+      }
+      delay(100);
+      return;
+    }
+
+    mqtt.loop();
   }
 }

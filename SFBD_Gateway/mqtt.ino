@@ -29,7 +29,7 @@ int8_t get_topic(char topic_name_buffer[], uint8_t topic_type) {
 
 
 void mqttCallback(char *topic, byte *payload, unsigned int len) {
-  SerialGeneric.print("Message arrived [");
+  SerialGeneric.print("Message arrived by W [");
   SerialGeneric.print(topic);
   SerialGeneric.print("]: ");
   SerialGeneric.write(payload, len);
@@ -46,6 +46,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int len) {
 
 
 boolean mqttConnect() {
+  mqtt_gprs.disconnect();
   SerialGeneric.print("Connecting to ");
   SerialGeneric.print(broker);
 
@@ -68,6 +69,7 @@ boolean mqttConnect() {
 // #################################   GPRS MQTT ###########################
 
 void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
+
   SerialGeneric.print("Message arrived [");
   SerialGeneric.print(topic);
   SerialGeneric.print("]: ");
@@ -78,13 +80,15 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
   if (String(topic) == topicLed) {
     ledStatus = !ledStatus;
     digitalWrite(LED_GPIO, ledStatus);
-    mqtt_gprs.publish(topicLedStatus, ledStatus ? "1" : "0");
+    mqtt_gprs.publish(publish_topic, ledStatus ? "1" : "0");
+    // mqtt_gprs.disconnect();
   }
 }
 
 
 
 boolean mqttConnect_gprs() {
+ 
   SerialGeneric.print("Connecting to ");
   SerialGeneric.print(broker);
 

@@ -73,28 +73,10 @@ void set_apn() {
  for (i = 0; i < 11; i++) {
         SerialGeneric.print(apn[i]);
     } 
+    SerialGeneric.println("");
 }
 
 
 
-bool testInternetConnectivity() {
-  WiFiClient client;
-  const char* server = "www.google.com"; // Specify the server address
-  
-  // Check Wi-Fi connection
-  if (WiFi.status() != WL_CONNECTED) {
-    SerialGeneric.println("WiFi connection lost");
-    return false;
-  }
 
-  // Attempt to connect to the server
-  if (!client.connect(server, 80)) {
-    SerialGeneric.println("Failed to connect to server");
-    return false;
-  }
-
-  // Server connected, return success
-  client.stop();
-  return true;
-}
 

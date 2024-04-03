@@ -4,7 +4,7 @@
 #include <Wire.h>
 
 
-#define TRIGGER_PIN 4
+#define TRIGGER_PIN 18
 
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
