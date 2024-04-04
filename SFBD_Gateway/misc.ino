@@ -44,39 +44,72 @@ void saveParamCallback() {
 
 
 void set_apn() {
-  String apn_id = NVS.getString("apn_id");
-  SerialGeneric.print("APN read:");
-  SerialGeneric.println(apn_id);
+  apn_id = NVS.getString("apn_id");
+  SerialGeneric.print("APN read:"); SerialGeneric.println(apn_id);
   String real_apn_name;
   if (apn_id == "1") {
     real_apn_name = "GP-INTERNET";
     real_apn_name.toCharArray(apn, 15);
+    apnIsEmpty = false;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+
   } else if (apn_id == "2") {
     real_apn_name = "Robi-INTERNET";
     real_apn_name.toCharArray(apn, 15);
-    ;
+    apnIsEmpty = false;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+    
   } else if (apn_id == "3") {
     real_apn_name = "Banglalink-WEB";
     real_apn_name.toCharArray(apn, 15);
-    ;
+    apnIsEmpty = false;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+
   } else if (apn_id == "4") {
     real_apn_name = "TT-INTERNET";
     real_apn_name.toCharArray(apn, 15);
-    ;
+    apnIsEmpty = false;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+   
   } else if (apn_id == "5") {
     real_apn_name = "Airtel Internet";
-    ;
     real_apn_name.toCharArray(apn, 15);
-    ;
+    apnIsEmpty = false;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+
   } else {
+    apnIsEmpty = true;
+    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
   }
- for (i = 0; i < 11; i++) {
-        SerialGeneric.print(apn[i]);
-    } 
-    SerialGeneric.println("");
+
+  if(!apnIsEmpty){
+  int i=0;
+  for (i = 0; i < 11; i++) {
+    SerialGeneric.print(apn[i]);
+  }
+  }
+  SerialGeneric.println("");
 }
 
 
+bool delayPassed(unsigned long delayTime) {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= delayTime) {
+    previousMillis = currentMillis;
+    return true;
+  }
+  return false;
+}
 
 
+void erase_apn() {
+  
+  bool return_erro_check;
+  return_erro_check = NVS.setString("apn_id", "");
+  if (!return_erro_check) {
 
+    SerialGeneric.println("APN could not be cleared");
+  } else {
+    SerialGeneric.println("APN cleared");
+  }
+}

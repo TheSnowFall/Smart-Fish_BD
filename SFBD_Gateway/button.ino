@@ -24,6 +24,6 @@ void duringPress(){
 
 void doubleClick() {
   SerialGeneric.println("doubleClick() detected.");
-  long_press=true;
+  reset_setting=true;
 
 } // doubleClick
