@@ -220,8 +220,8 @@ void loop() {
   }
 
 
-  if (ESerial.available() >= 3) {
-  Serial.print(" Response Received:");
+  if (ESerial.available() > 1) {
+  Serial.print("Received Data:");
   for (int i = 0; i < 4; i++) {
     received_response[i] = ESerial.read();
     if (i == 1 || i == 2) {

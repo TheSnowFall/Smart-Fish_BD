@@ -21,6 +21,11 @@
 HardwareSerial LoRA(USART2);
 
 byte payload[4] = { 0, };
+byte res_payload[4] = { 0, };
+
+
+bool send_response = false;
+bool response_sent = false;
 
 void setup() {
   pinMode(M0_PIN, OUTPUT_OPEN_DRAIN);
@@ -43,6 +48,21 @@ void setup() {
   pinMode(RELAY_10, OUTPUT);
   pinMode(RELAY_11, OUTPUT);
   pinMode(RELAY_12, OUTPUT);
+
+ digitalWrite(RELAY_1, HIGH);
+digitalWrite(RELAY_2, HIGH);
+digitalWrite(RELAY_3, HIGH);
+digitalWrite(RELAY_4, HIGH);
+digitalWrite(RELAY_5, HIGH);
+digitalWrite(RELAY_6, HIGH);
+digitalWrite(RELAY_7, HIGH);
+digitalWrite(RELAY_8, HIGH);
+digitalWrite(RELAY_9, HIGH);
+digitalWrite(RELAY_10, HIGH);
+digitalWrite(RELAY_11, HIGH);
+digitalWrite(RELAY_12, HIGH);
+
+
 
   Serial.begin(9600);
   LoRA.begin(9600);
@@ -67,12 +87,15 @@ void loop() {
           }
     }
       Serial.println(" ");
-      for (int i = 0; i < 4; i++) {
-          LoRA.write(payload[i]);
-          }
+      // for (int i = 0; i < 4; i++) {
+      //     LoRA.write(payload[i]);
+      //     }
+
+      send_response = true;
   }
 
-
+  
+if(payload[0] == 0x17 && payload[3] == 0x33){
 
   digitalWrite(RELAY_1,  isBitHigh(payload[1], 7) ? HIGH : LOW);
   digitalWrite(RELAY_2,  isBitHigh(payload[1], 6) ? HIGH : LOW);
@@ -88,7 +111,27 @@ void loop() {
   digitalWrite(RELAY_11, isBitHigh(payload[2], 5) ? HIGH : LOW);
   digitalWrite(RELAY_12, isBitHigh(payload[2], 4) ? HIGH : LOW);
 
+
+}
+
+
   delay(100);  // Delay for readability
+
+  if(send_response){
+    // read_pin_state();
+    for (int k = 0; k < 4; k++) {
+          LoRA.write(payload[k]);
+          }
+          response_sent =true;
+
+  }
+
+if(response_sent){
+send_response =false;
+response_sent = false;
+
+}
+
 
 }
 
@@ -102,3 +145,73 @@ void printBinary(uint8_t byte) {
 uint8_t isBitHigh(unsigned char byte, int bit_position) {
   return (byte & (1 << bit_position)) == 0;
 }
+
+
+// void read_pin_state(){
+
+ 
+//   pinMode(RELAY_1, INPUT);
+//   pinMode(RELAY_2, INPUT);
+//   pinMode(RELAY_3, INPUT);
+//   pinMode(RELAY_4, INPUT);
+//   pinMode(RELAY_5, INPUT);
+//   pinMode(RELAY_6, INPUT);
+//   pinMode(RELAY_7, INPUT);
+//   pinMode(RELAY_8, INPUT);
+//   pinMode(RELAY_9, INPUT);
+//   pinMode(RELAY_10, INPUT);
+//   pinMode(RELAY_11, INPUT);
+//   pinMode(RELAY_12, INPUT);
+
+//     delay(200);
+//     Serial.println(digitalRead(RELAY_1));
+//     bitWrite(res_payload[1], 7, (digitalRead(RELAY_1)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_2));
+//     bitWrite(res_payload[1], 6, (digitalRead(RELAY_2)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_3));
+//     bitWrite(res_payload[1], 5, (digitalRead(RELAY_3)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_4));
+//     bitWrite(res_payload[1], 4, (digitalRead(RELAY_4)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_5));
+//     bitWrite(res_payload[1], 3, (digitalRead(RELAY_5)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_6));
+//     bitWrite(res_payload[1], 2, (digitalRead(RELAY_6)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_7));
+//     bitWrite(res_payload[1], 1, (digitalRead(RELAY_7)== HIGH)? 0 : 1 );
+//      Serial.println(digitalRead(RELAY_8));
+//     bitWrite(res_payload[1], 0, (digitalRead(RELAY_8)== HIGH)? 0 : 1 );
+     
+
+//     Serial.println(digitalRead(RELAY_9));
+//     bitWrite(res_payload[2], 7, (digitalRead(RELAY_9)== HIGH)? 0 : 1 );
+//     Serial.println(digitalRead(RELAY_10));
+//     bitWrite(res_payload[2], 6, (digitalRead(RELAY_10)== HIGH)? 0 : 1 );
+//     Serial.println(digitalRead(RELAY_11));
+//     bitWrite(res_payload[2], 5, (digitalRead(RELAY_11)== HIGH)? 0 : 1 );
+//     Serial.println(digitalRead(RELAY_12));
+//     bitWrite(res_payload[2], 4, (digitalRead(RELAY_12)== HIGH)? 0 : 1 );
+
+//     bitWrite(res_payload[2], 3, 0);
+//     bitWrite(res_payload[2], 2, 0);
+//     bitWrite(res_payload[2], 1, 0);
+//     bitWrite(res_payload[2], 0, 0);
+
+
+//     res_payload[0]=payload[0];
+//     res_payload[3]=payload[3];
+
+//   pinMode(RELAY_1, OUTPUT);
+//   pinMode(RELAY_2, OUTPUT);
+//   pinMode(RELAY_3, OUTPUT);
+//   pinMode(RELAY_4, OUTPUT);
+//   pinMode(RELAY_5, OUTPUT);
+//   pinMode(RELAY_6, OUTPUT);
+//   pinMode(RELAY_7, OUTPUT);
+//   pinMode(RELAY_8, OUTPUT);
+//   pinMode(RELAY_9, OUTPUT);
+//   pinMode(RELAY_10, OUTPUT);
+//   pinMode(RELAY_11, OUTPUT);
+//   pinMode(RELAY_12, OUTPUT);
+
+
+// }
