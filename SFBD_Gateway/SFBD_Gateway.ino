@@ -40,6 +40,7 @@ bool printed_wifi_tag = false;
 char apNameChar[32];
 int timeout = 120;
 String apn_id;
+uint8_t mac[6];
 
 
 // ############################  Inserting variable regarding MQTT  ############################
@@ -217,6 +218,28 @@ void loop() {
   if (reset_setting == true) {
     single_press = true;
   }
+
+
+  if (ESerial.available() >= 3) {
+  Serial.print(" Response Received:");
+  for (int i = 0; i < 4; i++) {
+    received_response[i] = ESerial.read();
+    if (i == 1 || i == 2) {
+      Serial.print(" | 0b");
+      printBinary(received_response[i]);
+    } else {
+      Serial.print(" | 0x");
+      Serial.print(received_response[i], HEX);
+    }
+  }
+  Serial.println(" ");
+} 
+
+
+
+
+
+
 
   // wifi_manager
   if (single_press == true || Provision_status == NOT_PROVISIONED) {

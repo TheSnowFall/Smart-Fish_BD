@@ -2,7 +2,7 @@
 
 
 void generateAPName() {
-  uint8_t mac[6];
+  mac[6]={ 0 };
   char macStr[18] = { 0 };
 
   // Get MAC address
