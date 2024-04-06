@@ -9,6 +9,12 @@
 #include "OneButton.h"
 #include <ESP32Ping.h>
 #include <ArduinoJson.h>
+#include "EBYTE.h"
+
+
+
+
+
 
 #define GSM_PIN ""
 
@@ -71,12 +77,31 @@ unsigned long pressStartTime = 0;
 bool reset_setting = false;
 bool single_press = false;
 // ############################  Button variables  ###########################
+// ######## Radio Transmission data ######## 
+
+byte payload_from_mqtt[4] = {0,};
+byte received_response[4] = {0,};
+
+int channel_ebyte;
+ 
+// ######## Radio Transmission data ########
+
+//  ######### JSON Variable ############
+
+uint8_t endbyte_sen = 0x22;
+uint8_t endbyte_sw = 0x33;    
+
+//  ######### JSON Variable ############
 
 OneButton button(TRIGGER_PIN, true);
 
+HardwareSerial ESerial(2);
+EBYTE Transceiver(&ESerial, PIN_M0, PIN_M1, PIN_AX);
+
 WiFiClient client;
-TinyGsmClient client_gprs(modem);
 PubSubClient mqtt(client);
+
+TinyGsmClient client_gprs(modem);
 PubSubClient mqtt_gprs(client_gprs);
 
 WiFiManager *wmPtr;
@@ -104,11 +129,22 @@ void setup() {
 
   NVS.begin();
   SerialGeneric.begin(115200);
+  ESerial.begin(9600);
   SerialGeneric.println(F("\n#############      Starting Gateway, Smart Fish BD      #############"));
   SerialGeneric.println(F("#############      Developed By:Erfan Mahmud Tushar     #############"));
   SerialGeneric.println(F("#############      Firmware Version : 1.1.0             #############\n"));
   SerialGeneric.setDebugOutput(true);
   pinMode(LED_GPIO, OUTPUT);
+
+  pinMode(PIN_M0, OUTPUT);
+  pinMode(PIN_M1, OUTPUT);
+
+  digitalWrite(PIN_M0, LOW);
+  digitalWrite(PIN_M1, LOW);
+  
+  Transceiver.init();
+  delay(2000);
+  // Transceiver.PrintParameters();
 
   attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), checkTicks, CHANGE);
   button.attachClick(singleClick);

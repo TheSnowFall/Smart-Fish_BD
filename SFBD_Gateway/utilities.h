@@ -9,6 +9,10 @@
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
 
+#define PIN_M0               12
+#define PIN_M1               14
+#define PIN_AX               33
+
 #define MODEM_RST             5
 #define MODEM_PWRKEY          4
 #define MODEM_POWER_ON       23

@@ -24,22 +24,20 @@ int8_t get_topic(char topic_name_buffer[], uint8_t topic_type) {
 }
 
 
-void topic_ready(){
+void topic_ready() {
   if (get_topic(subscribe_topic, 0) == ESP_OK) {
-      SerialGeneric.print("Subscribe topic created:");
-      SerialGeneric.println(subscribe_topic);
-    }
-    else {
-      SerialGeneric.println("Subscribe topic could not be created!");
-    }
+    SerialGeneric.print("Subscribe topic created:");
+    SerialGeneric.println(subscribe_topic);
+  } else {
+    SerialGeneric.println("Subscribe topic could not be created!");
+  }
 
-    if (get_topic(publish_topic, 1) == ESP_OK) {
-      SerialGeneric.print("Publish topic created:");
-      SerialGeneric.println(publish_topic);
-    }
-    else {
-      SerialGeneric.println("Publish topic could not be created!");
-    }
+  if (get_topic(publish_topic, 1) == ESP_OK) {
+    SerialGeneric.print("Publish topic created:");
+    SerialGeneric.println(publish_topic);
+  } else {
+    SerialGeneric.println("Publish topic could not be created!");
+  }
 }
 
 
@@ -51,58 +49,23 @@ void mqttCallback(char *topic, byte *payload, unsigned int len) {
   SerialGeneric.write(payload, len);
   SerialGeneric.println();
 
+  if ( processJsonPayload((const char*)payload) == ESP_OK) {
 
-  char jsonBuffer[len + 1];
-  for (int i = 0; i < len; i++) {
-    jsonBuffer[i] = payload[i];
+    //  enter code for radio frequency change
+
+    for (int i = 0; i < 4; i++) {
+      ESerial.write(payload_from_mqtt[i]);
+     if (i == 1 || i == 2) {
+      Serial.print(" | 0b");
+      printBinary(payload_from_mqtt[i]);
+    } else {
+      Serial.print(" | 0x");
+      Serial.print(payload_from_mqtt[i], HEX);
+    }
   }
-  jsonBuffer[len] = '\0'; // Null-terminate the buffer
-
-  // Serial.println("Payload:");
-  // Serial.println(jsonBuffer);
-
-  // Parse JSON
-  DynamicJsonDocument doc(512); // Adjust the size as per your JSON message
-  DeserializationError error = deserializeJson(doc, jsonBuffer);
-
-  if (error) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(error.c_str());
-    return;
-  }
-
-  // Access the values from JSON
-  const char* addr = doc["addr"];
-  const char* type = doc["type"];
-  const char* relay = doc["relay"];
-
-  byte byteValue = strtol(addr, NULL, 0);
-  unsigned long longValue = strtoul(relay, NULL, 2);
-  byte byteValuebin = (byte)longValue;
-
-
-
-Serial.print("Byte value of ADDR: ");
-Serial.println(byteValue, HEX);
-Serial.print("Byte value of message: ");
-Serial.println(byteValuebin, BIN);
-Serial.print("Byte value of suffix: ");
-if (type == "sw") { 
-  Serial.print(51, HEX);
- }
- 
-
- 
-
-
-  // Only proceed if incoming message's topic matches
-  if (String(topic) == topicLed) {
-    ledStatus = !ledStatus;
-    digitalWrite(LED_GPIO, ledStatus);
-    // mqtt.publish(topicLedStatus, ledStatus ? "1" : "0");
-  }
+  Serial.println(" ");
 }
-
+}
 
 
 boolean mqttConnect() {
@@ -135,55 +98,21 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
   SerialGeneric.print("]: ");
   SerialGeneric.write(payload, len);
   SerialGeneric.println();
+  if ( processJsonPayload((const char*)payload) == ESP_OK) {
 
-   char jsonBuffer[len + 1];
-  for (int i = 0; i < len; i++) {
-    jsonBuffer[i] = payload[i];
+    //  enter code for radio frequency change
+
+    for (int i = 0; i < 4; i++) {
+      ESerial.write(payload_from_mqtt[i]);
+    }
   }
-  jsonBuffer[len] = '\0'; // Null-terminate the buffer
-
-  // Serial.println("Payload:");
-  // Serial.println(jsonBuffer);
-
-  // Parse JSON
-  DynamicJsonDocument doc(512); // Adjust the size as per your JSON message
-  DeserializationError error = deserializeJson(doc, jsonBuffer);
-
-  if (error) {
-    Serial.print("deserializeJson() failed: ");
-    Serial.println(error.c_str());
-    return;
-  }
-
-  // Access the values from JSON
-  const char* addr = doc["addr"];
-  const char* type = doc["type"];
-  const char* relay = doc["relay"];
-
-  byte byteValue = strtol(addr, NULL, 0);
-  Serial.print("Byte value: ");
-  Serial.println(byteValue, HEX);
-
-  Serial.print("Address: ");
-  Serial.println(addr);
-  Serial.print("Type: ");
-  Serial.println(type);
-  Serial.print("Relay: ");
-  Serial.println(relay);
-
-
-  // Only proceed if incoming message's topic matches
-  if (String(topic) == topicLed) {
-    ledStatus = !ledStatus;
-    digitalWrite(LED_GPIO, ledStatus);
-    // mqtt.publish(topicLedStatus, ledStatus ? "1" : "0");
-  }
+  else{
+    SerialGeneric.println("Json pars failed");
+    }
 }
 
-
-
 boolean mqttConnect_gprs() {
- 
+
   SerialGeneric.print("Connecting to ");
   SerialGeneric.print(broker);
 
@@ -202,5 +131,3 @@ boolean mqttConnect_gprs() {
   mqtt_gprs.subscribe(topicLed);
   return mqtt_gprs.connected();
 }
-
-

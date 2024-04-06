@@ -113,3 +113,11 @@ void erase_apn() {
     SerialGeneric.println("APN cleared");
   }
 }
+
+
+void printBinary(uint8_t byte) {
+  for (int i = 7; i >= 0; i--) {
+    Serial.print((byte >> i) & 0x01);
+  }
+}
+
