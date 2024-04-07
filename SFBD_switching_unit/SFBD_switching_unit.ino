@@ -18,7 +18,7 @@
 #define M1_PIN PA1
 
 
-HardwareSerial LoRA(USART2);
+HardwareSerial LoRa(USART2);
 
 byte payload[4] = { 0, };
 byte res_payload[4] = { 0, };
@@ -49,7 +49,7 @@ void setup() {
   pinMode(RELAY_11, OUTPUT);
   pinMode(RELAY_12, OUTPUT);
 
- digitalWrite(RELAY_1, HIGH);
+digitalWrite(RELAY_1, HIGH);
 digitalWrite(RELAY_2, HIGH);
 digitalWrite(RELAY_3, HIGH);
 digitalWrite(RELAY_4, HIGH);
@@ -65,7 +65,7 @@ digitalWrite(RELAY_12, HIGH);
 
 
   Serial.begin(9600);
-  LoRA.begin(9600);
+  LoRa.begin(9600);
   Serial.println("###### Relay operation starting ######");
 }
 
@@ -74,10 +74,10 @@ void loop() {
 
 
 
-  if (LoRA.available() >= 3) {
+  if (LoRa.available() >= 3) {
    
     for (int i = 0; i < 4; i++) {
-      payload[i] = LoRA.read();
+      payload[i] = LoRa.read();
        if (i == 1 || i == 2) {
             Serial.print(" | 0b");
             printBinary(payload[i]);
@@ -88,7 +88,7 @@ void loop() {
     }
       Serial.println(" ");
       // for (int i = 0; i < 4; i++) {
-      //     LoRA.write(payload[i]);
+      //     LoRa.write(payload[i]);
       //     }
 
       send_response = true;
@@ -120,7 +120,7 @@ if(payload[0] == 0x17 && payload[3] == 0x33){
   if(send_response){
     // read_pin_state();
     for (int k = 0; k < 4; k++) {
-          LoRA.write(payload[k]);
+          LoRa.write(payload[k]);
           }
           response_sent =true;
 

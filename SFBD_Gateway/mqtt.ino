@@ -1,45 +1,82 @@
 
 
-int8_t get_topic(char topic_name_buffer[], uint8_t topic_type) {
+// int8_t get_topic(char topic_name_buffer[], uint8_t topic_type) {
 
 
 
+//   if (topic_type == 0) {
+//     strcpy(topic_name_buffer, apNameChar);
+//     strcat(topic_name_buffer, "/sub");
+//     return ESP_OK;
+
+//   } else if (topic_type == 1) {
+//     strcpy(topic_name_buffer, apNameChar);
+//     strcat(topic_name_buffer, "/pub");
+//     return ESP_OK;
+
+//   } else {
+//   }
+
+
+
+
+//   return ESP_FAIL;
+// }
+
+
+// void topic_ready() {
+//   if (get_topic(subscribe_topic, 0) == ESP_OK) {
+//     SerialGeneric.print("Subscribe topic created:");
+//     SerialGeneric.println(subscribe_topic);
+//   } else {
+//     SerialGeneric.println("Subscribe topic could not be created!");
+//   }
+
+//   if (get_topic(publish_topic, 1) == ESP_OK) {
+//     SerialGeneric.print("Publish topic created:");
+//     SerialGeneric.println(publish_topic);
+//   } else {
+//     SerialGeneric.println("Publish topic could not be created!");
+//   }
+// }
+
+
+// ######################################################################
+
+void topic_ready() {
+  if (get_topic(subscribe_topic, 0) == ESP_OK) {
+    Serial.print("Subscribe topic created: ");
+    Serial.println(subscribe_topic);
+  } else {
+    Serial.println("Subscribe topic could not be created!");
+  }
+
+  if (get_topic(publish_topic, 1) == ESP_OK) {
+    Serial.print("Publish topic created: ");
+    Serial.println(publish_topic);
+  } else {
+    Serial.println("Publish topic could not be created!");
+  }
+}
+
+int8_t get_topic(char* topic_name_buffer, uint8_t topic_type) {
   if (topic_type == 0) {
     strcpy(topic_name_buffer, apNameChar);
     strcat(topic_name_buffer, "/sub");
     return ESP_OK;
-
   } else if (topic_type == 1) {
     strcpy(topic_name_buffer, apNameChar);
     strcat(topic_name_buffer, "/pub");
     return ESP_OK;
-
   } else {
-  }
-
-
-
-
-  return ESP_FAIL;
-}
-
-
-void topic_ready() {
-  if (get_topic(subscribe_topic, 0) == ESP_OK) {
-    SerialGeneric.print("Subscribe topic created:");
-    SerialGeneric.println(subscribe_topic);
-  } else {
-    SerialGeneric.println("Subscribe topic could not be created!");
-  }
-
-  if (get_topic(publish_topic, 1) == ESP_OK) {
-    SerialGeneric.print("Publish topic created:");
-    SerialGeneric.println(publish_topic);
-  } else {
-    SerialGeneric.println("Publish topic could not be created!");
+    return ESP_FAIL;
   }
 }
 
+
+
+
+// ######################################################################
 
 
 void mqttCallback(char *topic, byte *payload, unsigned int len) {
@@ -84,8 +121,12 @@ boolean mqttConnect() {
     return false;
   }
   SerialGeneric.println(" success");
-
-  mqtt.subscribe(topicLed);
+  char* publishing_update_on_boot = "{\"update\":1}";
+  Serial.println("Publishing topic");
+  mqtt.publish(publish_topic, publishing_update_on_boot);
+  // mqtt.subscribe(topicLed);
+  
+  mqtt.subscribe(subscribe_topic);
   return mqtt.connected();
 }
 
@@ -127,7 +168,8 @@ boolean mqttConnect_gprs() {
     return false;
   }
   SerialGeneric.println(" success");
-
-  mqtt_gprs.subscribe(topicLed);
+  char* publishing_update_on_boot = "{\"update\":1}";
+  mqtt_gprs.publish(publish_topic, publishing_update_on_boot);
+  mqtt_gprs.subscribe(subscribe_topic);
   return mqtt_gprs.connected();
 }

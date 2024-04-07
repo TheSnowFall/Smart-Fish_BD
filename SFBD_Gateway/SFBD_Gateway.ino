@@ -1,5 +1,6 @@
 #define TINY_GSM_MODEM_SIM800
 #define SIM800L_IP5306_VERSION_20190610
+#define WDT_TIMEOUT 15000
 
 #include <Arduino.h>
 #include <WiFiManager.h>
@@ -10,6 +11,7 @@
 #include <ESP32Ping.h>
 #include <ArduinoJson.h>
 #include "EBYTE.h"
+#include "esp_task_wdt.h"
 
 
 
@@ -48,8 +50,10 @@ uint8_t mac[6];
 char *broker = "68.183.231.35";
 char *topicLed = "tushar/mqtt_test";
 char *topicLedStatus = "tushar/go";
-char subscribe_topic[13] = { 0,};
-char publish_topic[13] = { 0, };
+// char subscribe_topic[13] = { 0,};
+// char publish_topic[13] = { 0, };
+char* subscribe_topic;
+char* publish_topic;
 
 // ############################  Inserting variable regarding MQTT  ############################
 const char *remote_host = "www.google.com";
@@ -80,17 +84,22 @@ bool single_press = false;
 // ############################  Button variables  ###########################
 // ######## Radio Transmission data ######## 
 
-byte payload_from_mqtt[4] = {0,};
-byte received_response[4] = {0,};
+byte payload_from_mqtt[4]   = {0,};
+byte received_response[10]  = {0,};
+byte received_sen_data[10]  = {0,};
+byte received_rely_msg[4]   = {0,};
 
+uint8_t payload_index = 0;
 int channel_ebyte;
  
 // ######## Radio Transmission data ########
-
+byte mqtt_status_publish_done = false;
+byte mqtt_status_gprs_publish_done = false ;
 //  ######### JSON Variable ############
 
 uint8_t endbyte_sen = 0x22;
 uint8_t endbyte_sw = 0x33;    
+bool payload_received = false;
 
 //  ######### JSON Variable ############
 
@@ -123,6 +132,9 @@ void IRAM_ATTR checkTicks() {
 }
 
 void setup() {
+  subscribe_topic = (char*)malloc(20 * sizeof(char));
+  publish_topic = (char*)malloc(20 * sizeof(char));
+  
   delay(3000);
   WiFi.mode(WIFI_STA);
   WiFi.begin();
@@ -147,9 +159,16 @@ void setup() {
   delay(2000);
   // Transceiver.PrintParameters();
 
+
+  esp_task_wdt_init(WDT_TIMEOUT, true); // Enable panic so ESP32 restarts
+  esp_task_wdt_add(NULL);
+
   attachInterrupt(digitalPinToInterrupt(TRIGGER_PIN), checkTicks, CHANGE);
   button.attachClick(singleClick);
-  button.attachDoubleClick(doubleClick);
+  // button.attachDoubleClick(doubleClick);
+  
+  button.attachDuringLongPress(duringPress);
+  
 
 
 
@@ -180,6 +199,7 @@ void setup() {
   if (Provision_status == PROVISIONED) {
     Serial.println("I am inside fully provisioned");
     topic_ready();
+    
 
     getting_sim_ready();
 
@@ -220,24 +240,64 @@ void loop() {
   }
 
 
-  if (ESerial.available() > 1) {
-  Serial.print("Received Data:");
-  for (int i = 0; i < 4; i++) {
-    received_response[i] = ESerial.read();
-    if (i == 1 || i == 2) {
-      Serial.print(" | 0b");
-      printBinary(received_response[i]);
-    } else {
-      Serial.print(" | 0x");
-      Serial.print(received_response[i], HEX);
+//   if (ESerial.available() > 1) {
+//   Serial.print("Received Data:");
+//   for (int i = 0; i < 4; i++) {
+//     received_response[i] = ESerial.read();
+//     if (i == 1 || i == 2) {
+//       Serial.print(" | 0b");
+//       printBinary(received_response[i]);
+//     } else {
+//       Serial.print(" | 0x");
+//       Serial.print(received_response[i], HEX);
+//     }
+//   }
+//   Serial.println(" ");
+// } 
+
+
+  if (ESerial.available() > 0) {
+    uint8_t received_byte = ESerial.read();
+    
+    // Check for the start byte of payload[4]
+    if (received_byte == 0x17) {
+      payload_index = 0;
     }
+    // Check for the start byte of payload[11]
+    else if (received_byte == 0x26) {
+      payload_index = 0;
+    }
+    
+    // Store the received byte into the payload array
+    received_response[payload_index++] = received_byte;
+
+    // Check if payload[4] is complete
+    if ( received_response[3] == endbyte_sw && received_response[0] == 0x17) {
+      received_response[0] = received_rely_msg[0] ;
+      received_response[1] = received_rely_msg[1] ;
+      received_response[2] = received_rely_msg[2] ;
+      received_response[3] = received_rely_msg[3] ;
+      payload_received = true;
+
+      
+    }
+    // Check if payload[11] is complete
+    else if ( received_response[10] == endbyte_sen && received_response[0] == 0x26) {
+     for(int m =0; m<11; m++ ){
+      received_response[m] = received_sen_data[m];
+
+     }
+      payload_received = true;
+    }
+    if (payload_received) {
+      Serial.println("Received payload:");
+      for (int i = 0; i < payload_index; i++) {
+        Serial.print(received_response[i], HEX);
+        Serial.print(" ");
+      }
+      Serial.println();
+      }
   }
-  Serial.println(" ");
-} 
-
-
-
-
 
 
 

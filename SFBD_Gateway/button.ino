@@ -13,11 +13,16 @@ void singleClick() {
 
 void duringPress(){
 
+    
 
-
-    SerialGeneric.print("duringPress(");
-  SerialGeneric.print(millis() - pressStartTime);
-  SerialGeneric.println(") detected.");
+SerialGeneric.print("duringPress(");
+esp_task_wdt_reset();
+if((millis() - button.getPressedMs()) >=10000){
+  reset_setting = true;
+  
+}
+SerialGeneric.print(millis() - pressStartTime);
+SerialGeneric.println(") detected.");
  
 }
 
