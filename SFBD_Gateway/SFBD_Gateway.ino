@@ -1,6 +1,7 @@
 #define TINY_GSM_MODEM_SIM800
 #define SIM800L_IP5306_VERSION_20190610
 #define WDT_TIMEOUT 15000
+#define MAX_BUFFER_SIZE 20
 
 #include <Arduino.h>
 #include <WiFiManager.h>
@@ -43,17 +44,18 @@ char apNameChar[32];
 int timeout = 120;
 String apn_id;
 uint8_t mac[6];
-
+char gd_id[18];
 
 // ############################  Inserting variable regarding MQTT  ############################
 
 char *broker = "68.183.231.35";
-char *topicLed = "tushar/mqtt_test";
-char *topicLedStatus = "tushar/go";
+// char *topicLed = "tushar/mqtt_test";
+// char *topicLedStatus = "tushar/go";
 // char subscribe_topic[13] = { 0,};
 // char publish_topic[13] = { 0, };
 char* subscribe_topic;
 char* publish_topic;
+const char* relay_response_to_server;
 
 // ############################  Inserting variable regarding MQTT  ############################
 const char *remote_host = "www.google.com";
@@ -87,7 +89,10 @@ bool single_press = false;
 byte payload_from_mqtt[4]   = {0,};
 byte received_response[10]  = {0,};
 byte received_sen_data[10]  = {0,};
-byte received_rely_msg[4]   = {0,};
+byte received_relay_msg[4]   = {0,};
+
+int relay_msg_index = 0; // Index to keep track of received bytes for payload[4]
+int sen_data_index = 0; // Index to keep track of received bytes for sen_payload[10]
 
 uint8_t payload_index = 0;
 int channel_ebyte;
@@ -134,7 +139,7 @@ void IRAM_ATTR checkTicks() {
 void setup() {
   subscribe_topic = (char*)malloc(20 * sizeof(char));
   publish_topic = (char*)malloc(20 * sizeof(char));
-  
+
   delay(3000);
   WiFi.mode(WIFI_STA);
   WiFi.begin();
@@ -229,7 +234,7 @@ void setup() {
     // ??
   }
 
-  
+ blinkLED(2,100);
 }
 
 void loop() {
@@ -256,49 +261,7 @@ void loop() {
 // } 
 
 
-  if (ESerial.available() > 0) {
-    uint8_t received_byte = ESerial.read();
-    
-    // Check for the start byte of payload[4]
-    if (received_byte == 0x17) {
-      payload_index = 0;
-    }
-    // Check for the start byte of payload[11]
-    else if (received_byte == 0x26) {
-      payload_index = 0;
-    }
-    
-    // Store the received byte into the payload array
-    received_response[payload_index++] = received_byte;
-
-    // Check if payload[4] is complete
-    if ( received_response[3] == endbyte_sw && received_response[0] == 0x17) {
-      received_response[0] = received_rely_msg[0] ;
-      received_response[1] = received_rely_msg[1] ;
-      received_response[2] = received_rely_msg[2] ;
-      received_response[3] = received_rely_msg[3] ;
-      payload_received = true;
-
-      
-    }
-    // Check if payload[11] is complete
-    else if ( received_response[10] == endbyte_sen && received_response[0] == 0x26) {
-     for(int m =0; m<11; m++ ){
-      received_response[m] = received_sen_data[m];
-
-     }
-      payload_received = true;
-    }
-    if (payload_received) {
-      Serial.println("Received payload:");
-      for (int i = 0; i < payload_index; i++) {
-        Serial.print(received_response[i], HEX);
-        Serial.print(" ");
-      }
-      Serial.println();
-      }
-  }
-
+ processEbyteSerial();
 
 
   // wifi_manager

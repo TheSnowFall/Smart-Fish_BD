@@ -107,14 +107,14 @@ void loop() {
       if (sensorData.food != prev_sensorData.food || sensorData.tds != prev_sensorData.tds || sensorData.rain != prev_sensorData.rain || sensorData.temp != prev_sensorData.temp || sensorData.o2 != prev_sensorData.o2 || sensorData.ph != prev_sensorData.ph) {
 
         // Print the new sensor data
-        printSensorData(sensorData);
+        // printSensorData(sensorData);
 
         // Pack sensor data into sen_payload
         packSensorData(sensorData);
 
         // Print the packed payload
         Serial.println("Packed Payload:");
-        for (int i = 0; i < sizeof(sen_payload); i++) {
+        for (int i = 0; i < 10; i++) {
           LoRa.write(sen_payload[i]);
           Serial.print(sen_payload[i], HEX);  // Print in hexadecimal format
           Serial.print(" ");

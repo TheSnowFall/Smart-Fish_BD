@@ -10,6 +10,7 @@ void generateAPName() {
 
   // Convert MAC address to string
   sprintf(macStr, "%02X%02X", mac[4], mac[5]);
+  sprintf(gd_id, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
   // Generate AP name
   sprintf(apNameChar, "SFBD_%s", macStr);
@@ -121,3 +122,77 @@ void printBinary(uint8_t byte) {
   }
 }
 
+void processEbyteSerial() {
+  while (ESerial.available()) {
+    byte incomingByte = ESerial.read();
+
+    // Check if received payload[4]
+    if (incomingByte == 0x17 && relay_msg_index == 0) {
+      received_relay_msg[relay_msg_index++] = incomingByte;
+    } else if (relay_msg_index > 0 && relay_msg_index < 4) {
+      received_relay_msg[relay_msg_index++] = incomingByte;
+      if (relay_msg_index == 4 && incomingByte == 0x33) {
+        // Entire payload[4] received
+        // Do something with received_relay_msg[] here
+        // For example, print it to Serial
+        publish_relay_response();
+        mqtt.publish(publish_topic, relay_response_to_server);
+        Serial.print("Received relay Response:  ");
+        for (int i = 0; i < 4; i++) {
+
+          if (i == 1 || i == 2) {
+            Serial.print(" | 0b");
+            printBinary(received_relay_msg[i]);
+          } else {
+            Serial.print(" | 0x");
+            Serial.print(received_relay_msg[i], HEX);
+            Serial.print(" ");
+          }
+        }
+        Serial.println();
+        // Reset relay_msg_index for next payload[4]
+        relay_msg_index = 0;
+      }
+    }
+
+    // Check if received sen_payload[10]
+    if (incomingByte == 0x26 && sen_data_index == 0) {
+      received_sen_data[sen_data_index++] = incomingByte;
+    } else if (sen_data_index > 0 && sen_data_index < 10) {
+      received_sen_data[sen_data_index++] = incomingByte;
+      if (sen_data_index == 10 && incomingByte == 0x22) {
+        // Entire sen_payload[10] received
+        // Do something with received_sen_data[] here
+        // For example, print it to Serial
+        Serial.println("Received sensor data:");
+        for (int i = 0; i < 10; i++) {
+          if(i == 0 || i == 9){
+          Serial.print(" | 0x");
+          Serial.print(received_sen_data[i], HEX);
+          Serial.print(" ");
+          }
+          else{
+            Serial.print(" | 0b");
+            printBinary(received_sen_data[i]);
+            Serial.print(" ");
+          }
+
+        }
+        Serial.println();
+        // Reset sen_data_index for next sen_payload[10]
+        sen_data_index = 0;
+      }
+    }
+  }
+}
+
+void blinkLED(int numBlinks, int blinkDelay) {
+  
+  
+  for (int i = 0; i < numBlinks; i++) {
+    digitalWrite(LED_GPIO, LOW); // Turn LED on
+    delayPassed(blinkDelay); // Wait
+    digitalWrite(LED_GPIO, HIGH); // Turn LED off
+    delayPassed(blinkDelay); // Wait
+  }
+}

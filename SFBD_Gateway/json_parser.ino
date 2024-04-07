@@ -40,3 +40,36 @@ int8_t processJsonPayload(const char* json_payload) {
 
   return ESP_OK;
 }
+
+
+
+
+
+void publish_relay_response() {
+  StaticJsonDocument<200> doc;
+
+  // Populate the JSON document
+  doc["gw_id"] = gd_id;
+  doc["addr"] = "0x" + String(received_relay_msg[0], HEX);
+  doc["type"] = "sw";
+
+  // Extract relay commands from received_relay_msg[1] and received_relay_msg[2]
+  String relayCommands;
+  for (int i = 7; i >= 0; i--) {
+    relayCommands += bitRead(received_relay_msg[1], i) ? '1' : '0';
+  }
+  for (int i = 7; i > 3; i--) {
+    relayCommands += bitRead(received_relay_msg[2], i) ? '1' : '0';
+  }
+  doc["relay"] = relayCommands;
+
+  // Serialize the JSON document to a string
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  // Convert jsonString to const char* for MQTT publish
+  relay_response_to_server = jsonString.c_str();
+
+  // Publish the JSON string to the specified topic
+  
+}
