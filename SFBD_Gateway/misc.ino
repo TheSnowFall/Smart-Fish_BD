@@ -2,7 +2,7 @@
 
 
 void generateAPName() {
-  mac[6]={ 0 };
+  mac[6] = { 0 };
   char macStr[18] = { 0 };
 
   // Get MAC address
@@ -46,48 +46,55 @@ void saveParamCallback() {
 
 void set_apn() {
   apn_id = NVS.getString("apn_id");
-  SerialGeneric.print("APN read:"); SerialGeneric.println(apn_id);
+  SerialGeneric.print("APN read:");
+  SerialGeneric.println(apn_id);
   String real_apn_name;
   if (apn_id == "1") {
     real_apn_name = "GP-INTERNET";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
 
   } else if (apn_id == "2") {
     real_apn_name = "Robi-INTERNET";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
-    
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
+
   } else if (apn_id == "3") {
     real_apn_name = "Banglalink-WEB";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
 
   } else if (apn_id == "4") {
     real_apn_name = "TT-INTERNET";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
-   
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
+
   } else if (apn_id == "5") {
     real_apn_name = "Airtel Internet";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
 
   } else {
     apnIsEmpty = true;
-    Serial.print("[SET APN] apnIsEmpty = "); Serial.println(apnIsEmpty);
+    Serial.print("[SET APN] apnIsEmpty = ");
+    Serial.println(apnIsEmpty);
   }
 
-  if(!apnIsEmpty){
-  int i=0;
-  for (i = 0; i < 11; i++) {
-    SerialGeneric.print(apn[i]);
-  }
+  if (!apnIsEmpty) {
+    int i = 0;
+    for (i = 0; i < 11; i++) {
+      SerialGeneric.print(apn[i]);
+    }
   }
   SerialGeneric.println("");
 }
@@ -104,7 +111,7 @@ bool delayPassed(unsigned long delayTime) {
 
 
 void erase_apn() {
-  
+
   bool return_erro_check;
   return_erro_check = NVS.setString("apn_id", "");
   if (!return_erro_check) {
@@ -136,7 +143,11 @@ void processEbyteSerial() {
         // Do something with received_relay_msg[] here
         // For example, print it to Serial
         publish_relay_response();
-        mqtt.publish(publish_topic, relay_response_to_server);
+        if (wifi_fail_flag == false && gsm_task_flag == false) {
+          mqtt.publish(publish_topic, relay_response_to_server);
+        } else {
+          mqtt_gprs.publish(publish_topic, relay_response_to_server);
+        }
         Serial.print("Received relay Response:  ");
         for (int i = 0; i < 4; i++) {
 
@@ -166,17 +177,15 @@ void processEbyteSerial() {
         // For example, print it to Serial
         Serial.println("Received sensor data:");
         for (int i = 0; i < 10; i++) {
-          if(i == 0 || i == 9){
-          Serial.print(" | 0x");
-          Serial.print(received_sen_data[i], HEX);
-          Serial.print(" ");
-          }
-          else{
+          if (i == 0 || i == 9) {
+            Serial.print(" | 0x");
+            Serial.print(received_sen_data[i], HEX);
+            Serial.print(" ");
+          } else {
             Serial.print(" | 0b");
             printBinary(received_sen_data[i]);
             Serial.print(" ");
           }
-
         }
         Serial.println();
         // Reset sen_data_index for next sen_payload[10]
@@ -187,12 +196,12 @@ void processEbyteSerial() {
 }
 
 void blinkLED(int numBlinks, int blinkDelay) {
-  
-  
+
+
   for (int i = 0; i < numBlinks; i++) {
-    digitalWrite(LED_GPIO, LOW); // Turn LED on
-    delayPassed(blinkDelay); // Wait
-    digitalWrite(LED_GPIO, HIGH); // Turn LED off
-    delayPassed(blinkDelay); // Wait
+    digitalWrite(LED_GPIO, LOW);   // Turn LED on
+    delayPassed(blinkDelay);       // Wait
+    digitalWrite(LED_GPIO, HIGH);  // Turn LED off
+    delayPassed(blinkDelay);       // Wait
   }
 }

@@ -135,6 +135,7 @@ boolean mqttConnect_gprs() {
 
   if (status == false) {
     SerialGeneric.println(" fail");
+    modem.init();
     return false;
   }
   SerialGeneric.println(" success");
