@@ -17,11 +17,11 @@ void topic_ready() {
 int8_t get_topic(char *topic_name_buffer, uint8_t topic_type) {
   if (topic_type == 0) {
     strcpy(topic_name_buffer, apNameChar);
-    strcat(topic_name_buffer, "/sub");
+    strcat(topic_name_buffer, "/SUB");
     return ESP_OK;
   } else if (topic_type == 1) {
     strcpy(topic_name_buffer, apNameChar);
-    strcat(topic_name_buffer, "/pub");
+    strcat(topic_name_buffer, "/PUB");
     return ESP_OK;
   } else {
     return ESP_FAIL;
@@ -81,12 +81,17 @@ boolean mqttConnect() {
   }
   SerialGeneric.println(" success");
   //LED blink
-  blinkLED(2, 500);
+  // blinkLED(2, 500);
   //LED blink
-  char *publishing_update_on_boot = "{\"update\":1}";
-  // Serial.println("Publishing topic");
-  mqtt.publish(publish_topic, publishing_update_on_boot);
-  // mqtt.subscribe(topicLed);
+
+
+  if(status_update == false){
+    char *publishing_update_on_boot = "{\"update\":1}";
+       mqtt.publish(publish_topic, publishing_update_on_boot);
+       status_update = true;
+  }
+  
+
 
   mqtt.subscribe(subscribe_topic);
   return mqtt.connected();
@@ -103,7 +108,7 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
   SerialGeneric.println();
 
   //LED blink
-  blinkLED(5, 200);
+ 
   //LED blink
 
   if (processJsonPayload((const char *)payload) == ESP_OK) {
@@ -123,6 +128,7 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
       }
     }
     Serial.println(" ");
+    payload_from_mqtt[4]={0,};
   }
 }
 
@@ -139,15 +145,20 @@ boolean mqttConnect_gprs() {
 
   if (status == false) {
     SerialGeneric.println(" fail");
-    modem.init();
+    // modem.init();
     return false;
   }
   SerialGeneric.println(" success");
   //LED blink
-  blinkLED(2, 500);
+  // blinkLED(2, 500);
   //LED blink
-  char *publishing_update_on_boot = "{\"update\":1}";
-  mqtt_gprs.publish(publish_topic, publishing_update_on_boot);
+  if(status_update == false){
+    char *publishing_update_on_boot = "{\"update\":1}";
+     mqtt_gprs.publish(publish_topic, publishing_update_on_boot);
+     status_update = true;
+  }
+  
+ 
   mqtt_gprs.subscribe(subscribe_topic);
   return mqtt_gprs.connected();
 }

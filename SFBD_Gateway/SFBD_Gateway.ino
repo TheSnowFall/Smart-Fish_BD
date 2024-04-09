@@ -23,7 +23,7 @@
 
 #define SerialGeneric Serial
 #define SerialAT Serial1
-// #define DUMP_AT_COMMANDS
+                                            // #define DUMP_AT_COMMANDS
 #define TINY_GSM_DEBUG SerialGeneric
 
 #ifdef DUMP_AT_COMMANDS
@@ -101,10 +101,13 @@ int channel_ebyte;
 // ######## Radio Transmission data ########
 byte mqtt_status_publish_done = false;
 byte mqtt_status_gprs_publish_done = false ;
+bool status_update = false;
 //  ######### JSON Variable ############
 
 uint8_t endbyte_sen = 0x22;
 uint8_t endbyte_sw = 0x33;    
+uint8_t sw_addr= 0x44 ;
+uint8_t sen_addr= 0x26 ;
 bool payload_received = false;
 
 //  ######### JSON Variable ############
@@ -328,10 +331,12 @@ void loop() {
   else if (Provision_status == WIFI_PROVISIONED) {
     wifi_fail_flag = false;
     gsm_task_flag = false;
+    mqtt_gprs.disconnect();
     goto wifi_mqtt;
   } else if (Provision_status == GPRS_PROVISIONED) {
     wifi_fail_flag = true;
     gsm_task_flag = true;
+    mqtt.disconnect();
     goto gprs_mqtt;
   }
 
@@ -340,7 +345,8 @@ void loop() {
   }
 
 gprs_mqtt:
-  if (gsm_task_flag == true && wifi_fail_flag == true) {
+  if (gsm_task_flag == true && wifi_fail_flag == true) {\
+   
     if (!printed_gprs_tag) {
       SerialGeneric.println("########### MQTT IN GPRS #############");
       printed_gprs_tag = true;
@@ -362,6 +368,7 @@ gprs_mqtt:
 
 wifi_mqtt:
   if (gsm_task_flag == false && wifi_fail_flag == false) {
+      
     if (!printed_wifi_tag) {
       SerialGeneric.println("########### MQTT IN WiFi #############");
       printed_wifi_tag = true;

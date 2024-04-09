@@ -22,7 +22,7 @@ HardwareSerial LoRa(USART2);
 
 byte payload[4] = { 0, };
 byte res_payload[4] = { 0, };
-
+uint8_t sw_addr= 0x44 ;
 
 bool send_response = false;
 bool response_sent = false;
@@ -95,7 +95,7 @@ void loop() {
   }
 
   
-if(payload[0] == 0x17 && payload[3] == 0x33){
+if(payload[0] == sw_addr && payload[3] == 0x33){
 
   digitalWrite(RELAY_1,  isBitHigh(payload[1], 7) ? HIGH : LOW);
   digitalWrite(RELAY_2,  isBitHigh(payload[1], 6) ? HIGH : LOW);

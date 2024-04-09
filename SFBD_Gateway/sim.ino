@@ -6,7 +6,7 @@ void getting_sim_ready(){
 
   // Set GSM module baud rate and UART pins
   SerialAT.begin(115200, SERIAL_8N1, MODEM_RX, MODEM_TX);
-
+  
   delay(6000);
 
   // Restart takes quite some time

@@ -78,7 +78,7 @@ void set_apn() {
     Serial.println(apnIsEmpty);
 
   } else if (apn_id == "5") {
-    real_apn_name = "Airtel Internet";
+    real_apn_name = "internet";
     real_apn_name.toCharArray(apn, 15);
     apnIsEmpty = false;
     Serial.print("[SET APN] apnIsEmpty = ");
@@ -134,11 +134,11 @@ void processEbyteSerial() {
     byte incomingByte = ESerial.read();
 
     // Check if received payload[4]
-    if (incomingByte == 0x17 && relay_msg_index == 0) {
+    if (incomingByte == sw_addr && relay_msg_index == 0) {
       received_relay_msg[relay_msg_index++] = incomingByte;
     } else if (relay_msg_index > 0 && relay_msg_index < 4) {
       received_relay_msg[relay_msg_index++] = incomingByte;
-      if (relay_msg_index == 4 && incomingByte == 0x33) {
+      if (relay_msg_index == 4 && incomingByte == endbyte_sw) {
         // Entire payload[4] received
         // Do something with received_relay_msg[] here
         // For example, print it to Serial
@@ -169,11 +169,11 @@ void processEbyteSerial() {
     }
 
     // Check if received received_sen_data[10]
-    if (incomingByte == 0x26 && sen_data_index == 0) {
+    if (incomingByte == sen_addr && sen_data_index == 0) {
       received_sen_data[sen_data_index++] = incomingByte;
     } else if (sen_data_index > 0 && sen_data_index < 10) {
       received_sen_data[sen_data_index++] = incomingByte;
-      if (sen_data_index == 10 && incomingByte == 0x22) {
+      if (sen_data_index == 10 && incomingByte == endbyte_sen) {
         // Entire received_sen_data[10] received
         // Do something with received_sen_data[] here
         // For example, print it to Serial
