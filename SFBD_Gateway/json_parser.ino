@@ -73,3 +73,30 @@ void publish_relay_response() {
   // Publish the JSON string to the specified topic
   
 }
+
+
+void publish_sensor_data(const SensorData& data) {
+  StaticJsonDocument<200> doc;
+
+  // Populate the JSON document
+  doc["gw_id"] = gd_id;
+  doc["type"] = "sen";
+  doc["addr"] = "0x1A";
+
+  JsonObject sensorData = doc.createNestedObject("data");
+  sensorData["food"] = data.food;
+  sensorData["tds"] = data.tds / 100.0; // Convert to float
+  sensorData["rain"] = data.rain;
+  sensorData["temp"] = data.temp / 100.0; // Convert to float
+  sensorData["o2"] = data.o2 / 100.0; // Convert to float
+  sensorData["ph"] = data.ph;
+
+  // Serialize the JSON document to a string
+  String jsonString;
+  serializeJson(doc, jsonString);
+
+  // Convert jsonString to const char* for MQTT publish
+ sensor_data_to_server  = jsonString.c_str();
+
+ 
+}

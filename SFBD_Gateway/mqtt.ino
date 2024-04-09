@@ -45,7 +45,9 @@ void mqttCallback(char *topic, byte *payload, unsigned int len) {
   //LED blink
   if (processJsonPayload((const char *)payload) == ESP_OK) {
 
-    //  enter code for radio frequency change
+  Transceiver.SetChannel(28); //438 MHz
+  Transceiver.SaveParameters(TEMPORARY);
+
     Serial.print("Sending data :");
     for (int i = 0; i < 4; i++) {
       ESerial.write(payload_from_mqtt[i]);
@@ -107,6 +109,8 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
   if (processJsonPayload((const char *)payload) == ESP_OK) {
 
     //  enter code for radio frequency change
+  Transceiver.SetChannel(28); //438 MHz
+  Transceiver.SaveParameters(TEMPORARY);
     Serial.print("Sending data :");
     for (int i = 0; i < 4; i++) {
       ESerial.write(payload_from_mqtt[i]);

@@ -56,6 +56,7 @@ char *broker = "68.183.231.35";
 char* subscribe_topic;
 char* publish_topic;
 const char* relay_response_to_server;
+const char* sensor_data_to_server;
 
 // ############################  Inserting variable regarding MQTT  ############################
 const char *remote_host = "www.google.com";
@@ -132,6 +133,18 @@ enum wifi_conn_stat {
   WIFI_PROVISIONED
 };
 
+// ############## Received sensor data variable ################
+
+struct SensorData {
+  uint8_t food;
+  uint32_t tds;  // Changed to uint32_t to accommodate the full range
+  uint8_t rain;
+  uint32_t temp;  // Changed to uint32_t to accommodate the full range
+  uint16_t o2;    // Changed to uint16_t to accommodate the full range
+  uint8_t ph;
+};
+
+// ############## Received sensor data variable ################
 void IRAM_ATTR checkTicks() {
   button.tick();
 }

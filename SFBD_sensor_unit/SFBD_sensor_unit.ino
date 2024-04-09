@@ -85,7 +85,7 @@ void printSensorData(const SensorData& data) {
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   LoRa.begin(9600);
   Serial.println("Enter sensor data in the format: food tds rain temp o2 ph");
 }

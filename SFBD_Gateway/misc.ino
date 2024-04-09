@@ -163,16 +163,18 @@ void processEbyteSerial() {
         Serial.println();
         // Reset relay_msg_index for next payload[4]
         relay_msg_index = 0;
+        Transceiver.SetChannel(23);
+        Transceiver.SaveParameters(TEMPORARY);
       }
     }
 
-    // Check if received sen_payload[10]
+    // Check if received received_sen_data[10]
     if (incomingByte == 0x26 && sen_data_index == 0) {
       received_sen_data[sen_data_index++] = incomingByte;
     } else if (sen_data_index > 0 && sen_data_index < 10) {
       received_sen_data[sen_data_index++] = incomingByte;
       if (sen_data_index == 10 && incomingByte == 0x22) {
-        // Entire sen_payload[10] received
+        // Entire received_sen_data[10] received
         // Do something with received_sen_data[] here
         // For example, print it to Serial
         Serial.println("Received sensor data:");
@@ -187,8 +189,20 @@ void processEbyteSerial() {
             Serial.print(" ");
           }
         }
+
         Serial.println();
-        // Reset sen_data_index for next sen_payload[10]
+        SensorData unpackedData;
+        unpackSensorData(unpackedData);
+        publish_sensor_data(unpackedData);
+        printSensorData(unpackedData);
+
+        // Publish the JSON string to the specified topic
+        if (wifi_fail_flag == false && gsm_task_flag == false) {
+          mqtt.publish(publish_topic, sensor_data_to_server);
+        } else {
+          mqtt_gprs.publish(publish_topic, sensor_data_to_server);
+        }
+        // Reset sen_data_index for next received_sen_data[10]
         sen_data_index = 0;
       }
     }
@@ -204,4 +218,42 @@ void blinkLED(int numBlinks, int blinkDelay) {
     digitalWrite(LED_GPIO, HIGH);  // Turn LED off
     delayPassed(blinkDelay);       // Wait
   }
+}
+
+
+void unpackSensorData(SensorData& data) {
+  // Unpack food (2 bits)
+  data.food = (received_sen_data[1] >> 6) & 0x03;
+
+  // Unpack tds (17 bits)
+  data.tds = ((received_sen_data[1] & 0x3F) << 16) | (received_sen_data[2] << 8) | received_sen_data[3];
+
+  // Unpack rain (8 bits)
+  data.rain = received_sen_data[4];
+
+  // Unpack temp (15 bits)
+  data.temp = (received_sen_data[5] << 8) | received_sen_data[6];
+
+  // Unpack o2 (12 bits)
+  data.o2 = ((received_sen_data[7] << 4) & 0xFF0) | ((received_sen_data[8] >> 4) & 0x0F);
+
+  // Unpack ph (4 bits)
+  data.ph = received_sen_data[8] & 0x0F;
+}
+
+void printSensorData(const SensorData& data) {
+  Serial.println("############## Print Sensor data start ##############");
+  Serial.print("Food: ");
+  Serial.println(data.food);
+  Serial.print("TDS: ");
+  Serial.println((float)data.tds / 100);
+  Serial.print("Rain: ");
+  Serial.println(data.rain);
+  Serial.print("Temp: ");
+  Serial.println((float)data.temp / 100);
+  Serial.print("O2: ");
+  Serial.println((float)data.o2 / 100);
+  Serial.print("pH: ");
+  Serial.println(data.ph);
+  Serial.println("############## Print Sensor data end  ##############");
 }

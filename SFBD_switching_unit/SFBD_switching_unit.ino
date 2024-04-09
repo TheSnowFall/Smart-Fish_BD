@@ -121,7 +121,16 @@ if(payload[0] == 0x17 && payload[3] == 0x33){
     // read_pin_state();
     for (int k = 0; k < 4; k++) {
           LoRa.write(payload[k]);
+          if (k == 1 || k == 2) {
+            Serial.print(" | 0b");
+            printBinary(payload[k]);
+          } else {
+            Serial.print(" | 0x");
+            Serial.print(payload[k], HEX);
           }
+
+          }
+          Serial.println(" ");
           response_sent =true;
 
   }
