@@ -8,7 +8,7 @@
 
 
 #if defined(SIM800L_IP5306_VERSION_20190610)
-
+#define indicator
 #define PIN_M0               14
 #define PIN_M1               12
 #define PIN_AX               33
