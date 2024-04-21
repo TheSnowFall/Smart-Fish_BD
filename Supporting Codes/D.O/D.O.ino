@@ -1,6 +1,8 @@
 #include <Arduino.h>
 
-#define DO_PIN PA1
+
+
+#define DO_PIN PA0
 
 #define VREF 3300    //VREF (mv)
 #define ADC_RES 1024 //ADC Resolution
@@ -18,6 +20,9 @@
 //CAL1 High temperature point, CAL2 Low temperature point
 #define CAL2_V (1300) //mv
 #define CAL2_T (15)   //℃
+
+
+Kalman dissolved_oxygen;
 
 const uint16_t DO_Table[41] = {
     14460, 14220, 13820, 13440, 13090, 12740, 12420, 12110, 11810, 11530,

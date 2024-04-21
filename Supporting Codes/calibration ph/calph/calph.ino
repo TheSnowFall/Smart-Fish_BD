@@ -20,7 +20,7 @@
 #include "DFRobot_PH.h"
 #include <EEPROM.h>
 
-#define PH_PIN PA0
+#define PH_PIN PA1
 float voltage,phValue,temperature = 29;
 DFRobot_PH ph;
 

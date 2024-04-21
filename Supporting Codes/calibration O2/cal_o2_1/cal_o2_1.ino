@@ -16,4 +16,5 @@ void loop()
     raw=analogRead(PA1);
     Serial.println("raw:\t"+String(raw)+"\tVoltage(mv)"+String(raw*VREF/ADC_RES));
     delay(1000);
+    Serial.println(raw);
 }

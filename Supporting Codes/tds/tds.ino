@@ -1,69 +1,137 @@
+/***************************************************
+ DFRobot Gravity: Analog TDS Sensor/Meter
+ <https://www.dfrobot.com/wiki/index.php/Gravity:_Analog_TDS_Sensor_/_Meter_For_Arduino_SKU:_SEN0244>
 
-#define TdsSensorPin PA5
-// #define VREF 3.3      // analog reference voltage(Volt) of the ADC
-#define VREF 5      // analog reference voltage(Volt) of the ADC
-#define SCOUNT  30           // sum of sample point 
-int analogBuffer[SCOUNT];    // store the analog value in the array, read from ADC
-int analogBufferTemp[SCOUNT];
-int analogBufferIndex = 0;
-int copyIndex = 0;
-float averageVoltage = 0;
+ ***************************************************
+ This sample code shows how to read the tds value and calibrate it with the standard buffer solution.
+ 707ppm(1413us/cm)@25^c standard buffer solution is recommended.
+
+ Created 2018-1-3
+ By Jason <jason.ling@dfrobot.com@dfrobot.com>
+
+ GNU Lesser General Public License.
+ See <http://www.gnu.org/licenses/> for details.
+ All above must be included in any redistribution.
+ ****************************************************/
+
+ /***********Notice and Trouble shooting***************
+ 1. This code is tested on Arduino Uno with Arduino IDE 1.0.5 r2 and 1.8.2.
+ 2. Calibration CMD:
+     enter -> enter the calibration mode
+     cal:tds value -> calibrate with the known tds value(25^c). e.g.cal:707
+     exit -> save the parameters and exit the calibration mode
+ ****************************************************/
+
+#include <EEPROM.h>
+#include "GravityTDS.h"
+
+#define TdsSensorPin PA4
+#define DSPIN PA5
+GravityTDS gravityTds;
+
 float tdsValue = 0;
 
 void setup()
 {
-  Serial.begin(115200);
-  pinMode(TdsSensorPin, INPUT);
+    Serial.begin(115200);
+    gravityTds.setPin(TdsSensorPin);
+     analogReadResolution(10);
+    gravityTds.setAref(3.3);  //reference voltage on ADC, default 5.0V on Arduino UNO
+    gravityTds.setAdcRange(1024);  //1024 for 10bit ADC;4096 for 12bit ADC
+    gravityTds.begin();  //initialization
 }
 
 void loop()
 {
-  static unsigned long analogSampleTimepoint = millis();
-  if (millis() - analogSampleTimepoint > 40U)  //every 40 milliseconds, read the analog value from the ADC
-  {
-    analogSampleTimepoint = millis();
-    analogBuffer[analogBufferIndex] = analogRead(TdsSensorPin);    // read the analog value and store it into the buffer
-    analogBufferIndex++;
-    if (analogBufferIndex == SCOUNT)
-      analogBufferIndex = 0;
-  }
-  
-  static unsigned long printTimepoint = millis();
-  if (millis() - printTimepoint > 800U)
-  {
-    printTimepoint = millis();
-    for (copyIndex = 0; copyIndex < SCOUNT; copyIndex++)
-      analogBufferTemp[copyIndex] = analogBuffer[copyIndex];
-    averageVoltage = getMedianNum(analogBufferTemp, SCOUNT) * (float)VREF / 1024.0; // read the analog value more stably by the median filtering algorithm, and convert to a voltage value
-    tdsValue = (133.42 * averageVoltage * averageVoltage * averageVoltage - 255.86 * averageVoltage * averageVoltage + 857.39 * averageVoltage) * 0.5; // convert voltage value to TDS value
 
-    Serial.print("TDS Value:");
-    Serial.print(tdsValue, 0);
+  double temp = TempRead();
+  temp  = temp * 0.0625; // conversion accuracy is 0.0625 / LSB
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.println(" °C");
+  Serial.println("");
+
+
+    //temperature = readTemperature();  //add your temperature sensor and read it
+    gravityTds.setTemperature(temp);  // set the temperature and execute temperature compensation
+    gravityTds.update();  //sample and calculate
+    tdsValue = gravityTds.getTdsValue();  // then get the value
+    Serial.print(tdsValue,0);
     Serial.println("ppm");
-  }
+    delay(1000);
+    //  Serial.println(tdsValue,0);
 }
 
-int getMedianNum(int bArray[], int iFilterLen)
+
+boolean DS18B20_Init()
 {
-  int bTab[iFilterLen];
-  for (int i = 0; i < iFilterLen; i++)
-    bTab[i] = bArray[i];
-  int i, j, bTemp;
-  for (j = 0; j < iFilterLen - 1; j++)
+  pinMode(DSPIN, OUTPUT);
+  digitalWrite(DSPIN, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(DSPIN, LOW);
+  delayMicroseconds(750);//480-960
+  digitalWrite(DSPIN, HIGH);
+  pinMode(DSPIN, INPUT);
+  int t = 0;
+  while (digitalRead(DSPIN))
   {
-    for (i = 0; i < iFilterLen - j - 1; i++)
-    {
-      if (bTab[i] > bTab[i + 1])
-      {
-        bTemp = bTab[i];
-        bTab[i] = bTab[i + 1];
-        bTab[i + 1] = bTemp;
-      }
-    }
+    t++;
+    if (t > 60) return false;
+    delayMicroseconds(1);
   }
-  if ((iFilterLen & 1) > 0)
-    bTemp = bTab[(iFilterLen - 1) / 2];
-  else
-    bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
-  return bTemp;
+  t = 480 - t;
+  pinMode(DSPIN, OUTPUT);
+  delayMicroseconds(t);
+  digitalWrite(DSPIN, HIGH);
+  return true;
+}
+ 
+void DS18B20_Write(byte data)
+{
+  pinMode(DSPIN, OUTPUT);
+  for (int i = 0; i < 8; i++)
+  {
+    digitalWrite(DSPIN, LOW);
+    delayMicroseconds(10);
+    if (data & 1) digitalWrite(DSPIN, HIGH);
+    else digitalWrite(DSPIN, LOW);
+    data >>= 1;
+    delayMicroseconds(50);
+    digitalWrite(DSPIN, HIGH);
+  }
+}
+ 
+byte DS18B20_Read()
+{
+  pinMode(DSPIN, OUTPUT);
+  digitalWrite(DSPIN, HIGH);
+  delayMicroseconds(2);
+  byte data = 0;
+  for (int i = 0; i < 8; i++)
+  {
+    digitalWrite(DSPIN, LOW);
+    delayMicroseconds(1);
+    digitalWrite(DSPIN, HIGH);
+    pinMode(DSPIN, INPUT);
+    delayMicroseconds(5);
+    data >>= 1;
+    if (digitalRead(DSPIN)) data |= 0x80;
+    delayMicroseconds(55);
+    pinMode(DSPIN, OUTPUT);
+    digitalWrite(DSPIN, HIGH);
+  }
+  return data;
+}
+ 
+int TempRead()
+{
+  if (!DS18B20_Init()) return 0;
+  DS18B20_Write (0xCC); // Send skip ROM command
+  DS18B20_Write (0x44); // Send reading start conversion command
+  if (!DS18B20_Init()) return 0;
+  DS18B20_Write (0xCC); // Send skip ROM command
+  DS18B20_Write (0xBE); // Read the register, a total of nine bytes, the first two bytes are the conversion value
+  int temp = DS18B20_Read (); // Low byte
+  temp |= DS18B20_Read () << 8; // High byte
+  return temp;
 }

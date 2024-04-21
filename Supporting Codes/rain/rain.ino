@@ -1,5 +1,5 @@
 
-#define DO_PIN PB11     // ESP32's pin GPIO13 connected to DO pin of the rain sensor
+#define DO_PIN PB0     // ESP32's pin GPIO13 connected to DO pin of the rain sensor
 
 void setup() {
   // initialize serial communication
