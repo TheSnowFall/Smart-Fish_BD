@@ -16,11 +16,11 @@ void topic_ready() {
 
 int8_t get_topic(char *topic_name_buffer, uint8_t topic_type) {
   if (topic_type == 0) {
-    strcpy(topic_name_buffer, apNameChar);
+    strcpy(topic_name_buffer, apNameCharMqtt);
     strcat(topic_name_buffer, "/SUB");
     return ESP_OK;
   } else if (topic_type == 1) {
-    strcpy(topic_name_buffer, apNameChar);
+    strcpy(topic_name_buffer, apNameCharMqtt);
     strcat(topic_name_buffer, "/PUB");
     return ESP_OK;
   } else {
