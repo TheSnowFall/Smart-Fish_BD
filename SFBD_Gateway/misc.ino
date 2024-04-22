@@ -14,6 +14,7 @@ void generateAPName() {
 
   // Generate AP name
   sprintf(apNameChar, "SFBD_%s", macStr);
+  sprintf(apNameCharMqtt, "SFBD/%s", macStr);
 }
 
 
