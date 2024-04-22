@@ -41,7 +41,7 @@ bool wifi_fail_flag = false;
 bool printed_gprs_tag = false;
 bool printed_wifi_tag = false;
 char apNameChar[32];
-char apNameCharMqtt[33];
+char apNameCharMqtt[32];
 int timeout = 120;
 String apn_id;
 uint8_t mac[6];
@@ -91,7 +91,7 @@ bool single_press = false;
 byte payload_from_mqtt[4]   = {0,};
 byte received_response[10]  = {0,};
 byte received_sen_data[10]  = {0,};
-byte received_relay_msg[4]   = {0,};
+byte received_relay_msg[4]  = {0,};
 
 int relay_msg_index = 0; // Index to keep track of received bytes for payload[4]
 int sen_data_index = 0; // Index to keep track of received bytes for sen_payload[10]
@@ -115,7 +115,12 @@ bool payload_received = false;
 
 OneButton button(TRIGGER_PIN, true);
 
-HardwareSerial ESerial(2);
+/* 
+Change  the harsware serial 2 pins in BSP level of ESP32.
+TX2 >>19  RX2 >>18 is used here.
+*/
+
+HardwareSerial ESerial(2);   
 EBYTE Transceiver(&ESerial, PIN_M0, PIN_M1, PIN_AX);
 
 WiFiClient client;
