@@ -41,6 +41,7 @@ bool wifi_fail_flag = false;
 bool printed_gprs_tag = false;
 bool printed_wifi_tag = false;
 char apNameChar[32];
+char apNameCharMqtt[32];
 int timeout = 120;
 String apn_id;
 uint8_t mac[6];
