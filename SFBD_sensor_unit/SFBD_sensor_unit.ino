@@ -120,7 +120,7 @@ void setup() {
 }
 
 void loop() {
-
+  processEbytLoRaSerial();
   temperature();
   dissolve_o2_sen();
   ph_count();

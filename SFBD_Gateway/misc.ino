@@ -166,8 +166,16 @@ void processEbyteSerial() {
         relay_msg_index = 0;
         Transceiver.SetChannel(23);
         Transceiver.SaveParameters(TEMPORARY);
+        channel_change = false;
+        if (!initialSensorTrans) {
+          askSensorData();
+          initialSensorTrans = true;
+        }
+      } else {
+        //do nothing
       }
     }
+
 
     // Check if received received_sen_data[10]
     if (incomingByte == sen_addr && sen_data_index == 0) {
@@ -209,6 +217,7 @@ void processEbyteSerial() {
     }
   }
 }
+
 
 void blinkLED(int numBlinks, int blinkDelay) {
 
@@ -257,4 +266,16 @@ void printSensorData(const SensorData& data) {
   Serial.print("pH: ");
   Serial.println(data.ph);
   Serial.println("############## Print Sensor data end  ##############");
+}
+
+void askSensorData() {
+
+  sensor_data_req_e32[0] = sen_addr;
+  sensor_data_req_e32[1] = 0xAB;
+  sensor_data_req_e32[2] = endbyte_sen ;
+  for (int i = 0; i < 4; i++) {
+    ESerial.write(sensor_data_req_e32[i]);
+    Serial.print(sensor_data_req_e32[i], HEX);
+  }
+  Serial.println("");
 }

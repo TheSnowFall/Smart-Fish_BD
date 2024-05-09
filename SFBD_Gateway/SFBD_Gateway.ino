@@ -62,6 +62,7 @@ const char* sensor_data_to_server;
 // ############################  Inserting variable regarding MQTT  ############################
 const char *remote_host = "www.google.com";
 
+
 // ############################  Inserting variable regarding GPRS  ###########################
 char apn[15] = {0,};
 bool apnIsEmpty = true;
@@ -88,17 +89,21 @@ bool single_press = false;
 // ############################  Button variables  ###########################
 // ######## Radio Transmission data ######## 
 
-byte payload_from_mqtt[4]   = {0,};
-byte received_response[10]  = {0,};
-byte received_sen_data[10]  = {0,};
-byte received_relay_msg[4]  = {0,};
+byte relay_payload_from_mqtt[4] = {0,};
+byte received_response[10]      = {0,};
+byte received_sen_data[10]      = {0,};
+byte received_relay_msg[4]      = {0,};
+byte sensor_data_req_e32[3]     = {0,};
 
 int relay_msg_index = 0; // Index to keep track of received bytes for payload[4]
 int sen_data_index = 0; // Index to keep track of received bytes for sen_payload[10]
 
 uint8_t payload_index = 0;
 int channel_ebyte;
- 
+bool channel_change = false;
+unsigned long chChangeTimerStart = 0;
+const unsigned long chChangeTimerDuration = 10000; 
+
 // ######## Radio Transmission data ########
 byte mqtt_status_publish_done = false;
 byte mqtt_status_gprs_publish_done = false ;
@@ -110,13 +115,15 @@ uint8_t endbyte_sw = 0x33;
 uint8_t sw_addr= 0x44 ;
 uint8_t sen_addr= 0x26 ;
 bool payload_received = false;
+bool initialSensorTrans = false;
+
 
 //  ######### JSON Variable ############
 
 OneButton button(TRIGGER_PIN, true);
 
 /* 
-Change  the harsware serial 2 pins in BSP level of ESP32.
+Change  the hardware serial 2 pins in BSP level of ESP32.
 TX2 >>19  RX2 >>18 is used here.
 */
 
@@ -256,11 +263,19 @@ void setup() {
     // ??
   }
 
- blinkLED(2,100);
+
 }
 
 void loop() {
   button.tick();
+
+  //   if(Ping.ping(remote_host) == false){
+  //   digitalWrite(LED_GPIO, LED_OFF);
+  // }
+  // else{
+  //   digitalWrite(LED_GPIO, LED_ON);
+
+  // }
 
   if (reset_setting == true) {
     single_press = true;
@@ -282,8 +297,30 @@ void loop() {
 //   Serial.println(" ");
 // } 
 
+if (channel_change == true && (millis() - chChangeTimerStart >= chChangeTimerDuration)) {
+    
+    Transceiver.SetChannel(23);
+    Transceiver.SaveParameters(TEMPORARY);
+    channel_change = false;
+    chChangeTimerStart=0;
+  //  (Transceiver.GetChannel() ==23 )? Serial.println("In SEN signal") : Serial.println("In SW signal");
 
+    if(!initialSensorTrans){
+      askSensorData();
+      initialSensorTrans = true;
+
+    }else{
+      // do nothing
+    }
+
+  }
+
+  else{
+    // (Transceiver.GetChannel() ==23 )? Serial.println("In SEN signal") : Serial.println("In SW signal");
+  }
+  
  processEbyteSerial();
+
 
 
   // wifi_manager
@@ -322,6 +359,8 @@ void loop() {
     esp_restart();
   }
 
+
+
   if (Provision_status == PROVISIONED) {
     if ((WiFi.status() != WL_CONNECTED) || (Ping.ping(remote_host) == false)) {
       wifi_fail_flag = true;
@@ -359,6 +398,8 @@ gprs_mqtt:
     }
     if (!mqtt_gprs.connected()) {
       SerialGeneric.println("=== MQTT NOT CONNECTED G===");
+      digitalWrite(LED_GPIO, LED_OFF);
+      
       uint32_t t = millis();
       if (t - lastReconnectAttempt > 10000L) {
         lastReconnectAttempt = t;
@@ -381,6 +422,7 @@ wifi_mqtt:
     }
     if (!mqtt.connected()) {
       SerialGeneric.println("=== MQTT NOT CONNECTED W===");
+      digitalWrite(LED_GPIO, LED_OFF);
       uint32_t t = millis();
       if (t - lastReconnectAttempt > 10000L) {
         lastReconnectAttempt = t;

@@ -41,22 +41,24 @@ void mqttCallback(char *topic, byte *payload, unsigned int len) {
   SerialGeneric.write(payload, len);
   SerialGeneric.println();
   //LED blink
-  blinkLED(5, 200);
+  // blinkLED(5, 200);
   //LED blink
   if (processJsonPayload((const char *)payload) == ESP_OK) {
 
   Transceiver.SetChannel(28); //438 MHz
   Transceiver.SaveParameters(TEMPORARY);
+  channel_change = true;
+  chChangeTimerStart = millis();
 
     Serial.print("Sending data :");
     for (int i = 0; i < 4; i++) {
-      ESerial.write(payload_from_mqtt[i]);
+      ESerial.write(relay_payload_from_mqtt[i]);
       if (i == 1 || i == 2) {
         Serial.print(" | 0b");
-        printBinary(payload_from_mqtt[i]);
+        printBinary(relay_payload_from_mqtt[i]);
       } else {
         Serial.print(" | 0x");
-        Serial.print(payload_from_mqtt[i], HEX);
+        Serial.print(relay_payload_from_mqtt[i], HEX);
       }
     }
     Serial.println(" ");
@@ -80,6 +82,7 @@ boolean mqttConnect() {
     return false;
   }
   SerialGeneric.println(" success");
+  digitalWrite(LED_GPIO, LED_ON );
   //LED blink
   // blinkLED(2, 500);
   //LED blink
@@ -116,19 +119,21 @@ void mqttCallback_gprs(char *topic, byte *payload, unsigned int len) {
     //  enter code for radio frequency change
   Transceiver.SetChannel(28); //438 MHz
   Transceiver.SaveParameters(TEMPORARY);
+  channel_change = true;
+  chChangeTimerStart = millis();
     Serial.print("Sending data :");
     for (int i = 0; i < 4; i++) {
-      ESerial.write(payload_from_mqtt[i]);
+      ESerial.write(relay_payload_from_mqtt[i]);
       if (i == 1 || i == 2) {
         Serial.print(" | 0b");
-        printBinary(payload_from_mqtt[i]);
+        printBinary(relay_payload_from_mqtt[i]);
       } else {
         Serial.print(" | 0x");
-        Serial.print(payload_from_mqtt[i], HEX);
+        Serial.print(relay_payload_from_mqtt[i], HEX);
       }
     }
     Serial.println(" ");
-    payload_from_mqtt[4]={0,};
+    relay_payload_from_mqtt[4]={0,};
   }
 }
 
@@ -149,6 +154,8 @@ boolean mqttConnect_gprs() {
     return false;
   }
   SerialGeneric.println(" success");
+  digitalWrite(LED_GPIO, LED_ON);
+
   //LED blink
   // blinkLED(2, 500);
   //LED blink
