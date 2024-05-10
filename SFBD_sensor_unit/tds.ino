@@ -6,7 +6,7 @@ void tds_count() {
   
   // sensorValue= gravityTds.getTdsValue();  // then get the value
   // tdsValue = addReadingToMovingAverage(sensorValue);
-  Serial.println("[TDS]");
+  Serial.print("[TDS] ");
    Serial.print("TDS: ");
   Serial.print(tdsValue, 2);
   Serial.print("ppm");

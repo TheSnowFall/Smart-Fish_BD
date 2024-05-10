@@ -3,7 +3,7 @@ void rain() {
   int rain_state = digitalRead(RAIN_PIN);
 
 
-  Serial.println("[RAIN]");
+  Serial.print("[RAIN] ");
   if (rain_state == HIGH)
     Serial.print("The rain is NOT detected");
   else
