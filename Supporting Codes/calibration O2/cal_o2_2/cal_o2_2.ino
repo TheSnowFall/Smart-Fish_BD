@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define DO_PIN PA0
+#define DO_PIN PA1
 #define DSPIN PA5
 
 #define VREF 3300    //VREF (mv)
@@ -8,17 +8,19 @@
 
 //Single-point calibration Mode=0
 //Two-point calibration Mode=1
-#define TWO_POINT_CALIBRATION 0
+#define TWO_POINT_CALIBRATION 1
 
-#define READ_TEMP (31) //Current water temperature ℃, Or temperature sensor function
+// #define READ_TEMP (31) //Current water temperature ℃, Or temperature sensor function
 
 //Single point calibration needs to be filled CAL1_V and CAL1_T
-#define CAL1_V (1762) //mv
-#define CAL1_T (31)   //℃
+// #define CAL1_V  (734)//mv
+// #define CAL1_T   (29.69) //℃
+#define CAL1_V  (415)//mv
+#define CAL1_T   (28.87) //℃
 //Two-point calibration needs to be filled CAL2_V and CAL2_T
 //CAL1 High temperature point, CAL2 Low temperature point
-#define CAL2_V (1300) //mv
-#define CAL2_T (15)   //℃
+#define CAL2_V  (209)//mv
+#define CAL2_T   (13.31) //℃
 
 const uint16_t DO_Table[41] = {
     14460, 14220, 13820, 13440, 13090, 12740, 12420, 12110, 11810, 11530,
@@ -30,6 +32,19 @@ uint8_t Temperaturet;
 uint16_t ADC_Raw;
 uint16_t ADC_Voltage;
 uint16_t DO;
+
+
+
+
+const int numReadings = 10;
+
+int readings[numReadings];  // the readings from the analog input
+int readIndex = 0;          // the index of the current reading
+int total = 0;              // the running total
+int average = 0; 
+
+
+
 
 int16_t readDO(uint32_t voltage_mv, uint8_t temperature_c)
 {
@@ -46,29 +61,58 @@ void setup()
 {
   Serial.begin(115200);
   analogReadResolution(10);
+
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+  }
 }
 
 void loop()
 {
 
   double temp = TempRead();
-  temp  = temp * 0.0625; // conversion accuracy is 0.0625 / LSB
+  temp  = temp * 0.0629; // conversion accuracy is 0.0625 / LSB
   Serial.print("Temperature: ");
   Serial.print(temp);
-  Serial.println(" °C");
-  Serial.println("");
+  Serial.print(" °C,  ");
+  
 
 
   Temperaturet = (uint8_t)temp;
-  ADC_Raw = analogRead(DO_PIN);
+
+  total = total - readings[readIndex];
+  // ADC_Raw=analogRead(DO_PIN);
+  readings[readIndex] = analogRead(DO_PIN);
+  Serial.print("ADC_Raw: ");
+  Serial.print(ADC_Raw);
+  Serial.print(", ");
+  Serial.print(" ");
+
+  total = total + readings[readIndex];
+  // advance to the next position in the array:
+  readIndex = readIndex + 1;
+
+  // if we're at the end of the array...
+  if (readIndex >= numReadings) {
+    // ...wrap around to the beginning:
+    readIndex = 0;
+  }
+  ADC_Raw=total/numReadings;
+
+
   ADC_Voltage = uint32_t(VREF) * ADC_Raw / ADC_RES;
+  Serial.print("ADC_Voltage: ");
+  Serial.print(ADC_Voltage);
+  Serial.print(", ");
+  Serial.print(" ");
+
 
   // Serial.print("Temperaturet:\t" + String(Temperaturet) + "\t");
   // Serial.print("ADC RAW:\t" + String(ADC_Raw) + "\t");
   // Serial.print("ADC Voltage:\t" + String(ADC_Voltage) + "\t");
-  Serial.println("DO:\t" + String(readDO(ADC_Voltage, Temperaturet)/1000) + "mg/L\t");
+  Serial.println("DO:\t" + String(readDO(ADC_Voltage, Temperaturet)/1000.00) + "mg/L\t");
 
-  delay(1000);
+  delay(100);
 }
 
 
