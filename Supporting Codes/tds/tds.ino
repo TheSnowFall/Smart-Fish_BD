@@ -57,7 +57,7 @@ void loop()
     gravityTds.update();  //sample and calculate
     tdsValue = gravityTds.getTdsValue();  // then get the value
     Serial.print(tdsValue,0);
-    Serial.println("ppm");
+    Serial.println(" ppm");
     delay(1000);
     //  Serial.println(tdsValue,0);
 }

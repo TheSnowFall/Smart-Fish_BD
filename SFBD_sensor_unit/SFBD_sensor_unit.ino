@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <EEPROM.h>
+#include <STM32RTC.h>
 #include "DFRobot_PH.h"
 #include "GravityTDS.h"
 
@@ -68,6 +69,25 @@ uint16_t DO;
 
 // ################# D.O #################
 
+
+// ################# Timer  #################
+
+
+/* Get the rtc object */
+STM32RTC& rtc = STM32RTC::getInstance();
+
+static STM32RTC::Hour_Format hourFormat = STM32RTC::HOUR_24;
+
+
+unsigned long startTime = 0;
+const unsigned long sleepPeriod = 300; // 300 seconds
+const unsigned long sensorPeriod = 120;  // 120 seconds
+const unsigned long valvePeriod = 60;    // 60 seconds
+
+
+
+// ################# Timer #################
+
 // ################# filter #################
 const int numReadings = 10; // Adjust this value as needed
 
@@ -103,6 +123,13 @@ void setup() {
   Serial.begin(115200);
   analogReadResolution(10);
   LoRa.begin(9600);
+ //##############################  Timer ##################################
+
+timer_setup();
+
+
+//##############################  Timer ##################################
+
   ph.begin();
   gravityTds.setPin(TDS_PIN);
 
