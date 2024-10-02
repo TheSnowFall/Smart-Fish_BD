@@ -14,7 +14,8 @@ All codes are written using the Arduino IDE. The E32 module serves as the common
 For the gateway unit, the TTGO T-Call ESP32 wireless module was used.  
 [TTGO T-Call ESP32 Module](https://store.roboticsbd.com/communication-module/1412-ttgo-t-call-esp32-wireless-module-gprs-antenna-sim-card-sim800l-board-robotics-bangladesh.html)
 
-*(Place for photo)*
+![Gateway Photo](images/TTGO.jpg)
+
 
 ## 2. SFBD_Switching_Unit
 
