@@ -86,10 +86,11 @@ Upload the codes to their respective devices, and you're done!
 You can find the gateway configuration guide video [here](https://drive.google.com/file/d/18WGI2CXndcDLMi8Di_tGigBhUmnVskKT/view?usp=sharing).
 
    2. If your device was connected to any WiFi previously now you need to configure it again, then follow the steps: 
-i. ![TTGO T-Call](images/gateway.PNG)
-see the marked area in the photo. There is a button which is needed to be pressed by a pen for minimum 10s. 
+        i. ![TTGO T-Call](images/gateway.PNG)
+      
+        see the marked area in the photo. There is a button which is needed to be pressed by a pen for minimum 10s. 
 
-ii. Now follow the gateway configuration guide video [here](https://drive.google.com/file/d/18WGI2CXndcDLMi8Di_tGigBhUmnVskKT/view?usp=sharing).
+        ii. Now follow the gateway configuration guide video [here](https://drive.google.com/file/d/18WGI2CXndcDLMi8Di_tGigBhUmnVskKT/view?usp=sharing).
 ## Circuit Board
 
 All circuits were designed using an open-source software called Fritzing. You can download Fritzing from [this link](https://drive.google.com/file/d/1iceu7ZeL34dju8lppnuAEAwVtYvj-atZ/view?usp=sharing). The `.fzz` files in the repository are the Fritzing files.
