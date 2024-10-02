@@ -14,7 +14,7 @@ All codes are written using the Arduino IDE. The E32 module serves as the common
 For the gateway unit, the TTGO T-Call ESP32 wireless module was used.  
 [TTGO T-Call ESP32 Module](https://store.roboticsbd.com/communication-module/1412-ttgo-t-call-esp32-wireless-module-gprs-antenna-sim-card-sim800l-board-robotics-bangladesh.html)
 
-![Gateway Photo](images/TTGO.jpg)
+![TTGO T-Call](images/TTGO.jpg)
 
 
 ## 2. SFBD_Switching_Unit
@@ -22,15 +22,15 @@ For the gateway unit, the TTGO T-Call ESP32 wireless module was used.
 The switching unit uses the STM32 Bluepill microcontroller:  
 [STM32 Bluepill](https://store.roboticsbd.com/development-boards/350-stm32f103c8t6-blue-pill-development-board-robotics-bangladesh.html)
 
-*(Place for photo)*
+![Blue Pill](images/bluepill.jpeg)
 
 Additionally, it uses relay modules for switching:
 
 - [8-Channel Relay Module](https://store.roboticsbd.com/relay/1948-8-channel-5v-relay-module-robotics-bangladesh.html)  
-*(Place for photo)*
+
 
 - [4-Channel Relay Module](https://store.roboticsbd.com/robotics-parts/409-4-channel-5v-relay-board-module-robotics-bangladesh.html)  
-*(Place for photo)*
+
 
 ## 3. SFBD_Sensor_Unit
 
@@ -42,7 +42,7 @@ The sensor unit also uses the STM32 Bluepill microcontroller. This unit includes
 4. [Rain Sensor](https://techshopbd.com/detail/3502/Rain_Sensor_Module_techshop_bangladesh)
 5. [DFRobot TDS Sensor/Meter for Arduino](https://techshopbd.com/detail/3294/Gravity:_Analog_TDS_Sensor_Meter_for_Arduino_techshop_bangladesh)
 
-*(Place for photo)*
+
 
 ### Sensor Calibration
 
@@ -79,8 +79,19 @@ To use these codes in the Arduino IDE, you need to install the **ESP32** and **S
 
 Upload the codes to their respective devices, and you're done!
 
+
+## Gateway Configuration
+**There are 2 cases:**
+**1. **If your device is brand new, the following video is enough to configure.
+You can find the gateway configuration guide [here](https://drive.google.com/file/d/18WGI2CXndcDLMi8Di_tGigBhUmnVskKT/view?usp=sharing).
+
+**2. **If your device was connected to any WiFi previously now you need to configure it again, then follow the steps: 
+i. ![TTGO T-Call](images/gateway.PNG)
+see the marked area in the photo. There is a button which is needed to be pressed by a pen for minimum 10s. 
+
+ii. Now follow the above video.
 ## Circuit Board
 
 All circuits were designed using an open-source software called Fritzing. You can download Fritzing from [this link](https://drive.google.com/file/d/1iceu7ZeL34dju8lppnuAEAwVtYvj-atZ/view?usp=sharing). The `.fzz` files in the repository are the Fritzing files.
 
-Inside each folder, there is a zip file named `order_final`. Simply upload this zip file to TechShopPCB, and the circuit board manufacturing process is complete.
+Inside each folder, there is a zip file. Upload this zip file to TechShopPCB, and the circuit board manufacturing process is complete.
