@@ -10,14 +10,15 @@ void temperature() {
 
   // delay(500);
   uint32_t temp_measures_by_prob = temp * 100;
+  sensorData.temperature = temp_measures_by_prob;
+   Serial.println();
 
+  // uint8_t temperature_difference = (temp_measures_by_prob > prev_sensorData.temperature) ? (temp_measures_by_prob - prev_sensorData.temperature) : (prev_sensorData.temperature - temp_measures_by_prob);
+  // Serial.print(", temperature_difference:");
+  // Serial.println(temperature_difference);
+  // delay(100);
 
-  uint8_t temperature_difference = (temp_measures_by_prob > prev_sensorData.temperature) ? (temp_measures_by_prob - prev_sensorData.temperature) : (prev_sensorData.temperature - temp_measures_by_prob);
-  Serial.print(", temperature_difference:");
-  Serial.println(temperature_difference);
-  delay(100);
-
-  (temperature_difference > 30) ? (sensorData.temperature = temp_measures_by_prob) : Serial.println("No change in temperature values");
+  // (temperature_difference > 30) ? (sensorData.temperature = temp_measures_by_prob) : Serial.println("No change in temperature values");
 }
 
 boolean DS18B20_Init() {

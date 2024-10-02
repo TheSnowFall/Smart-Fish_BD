@@ -7,14 +7,16 @@ void ph_count() {
     Serial.print("[pH]");
     Serial.print("pH: ");
     Serial.print(phValue);
+    sensorData.ph = phValue;
+     Serial.println();
 
 
-    uint8_t pH_difference = (phValue > prev_sensorData.ph) ? (phValue - prev_sensorData.ph) : (prev_sensorData.ph - phValue);
-    Serial.print(", pH_difference:");
-    Serial.println(pH_difference);
-    delay(100);
+    // uint8_t pH_difference = (phValue > prev_sensorData.ph) ? (phValue - prev_sensorData.ph) : (prev_sensorData.ph - phValue);
+    // Serial.print(", pH_difference:");
+    // Serial.println(pH_difference);
+    // delay(100);
 
-    (pH_difference > 0.5) ? (sensorData.ph = phValue) : Serial.println("No change in pH values");
+    // (pH_difference > 0.5) ? (sensorData.ph = phValue) : Serial.println("No change in pH values");
   }
   ph.calibration(voltage, temp);  // calibration process by Serail CMD
 }
